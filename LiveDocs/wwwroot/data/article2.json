@@ -1,0 +1,8 @@
+﻿{
+  "Replacements": [
+    {
+      "Match": "swift-bacs-inbound-message",
+      "Instruction": "SvcBusMessageInfo"
+    }
+  ] 
+}

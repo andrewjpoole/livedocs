@@ -1,0 +1,80 @@
+﻿@page "/"
+@using System.Text.RegularExpressions
+@using System.Text.Json
+@using System.Reflection
+@using System.Threading
+@inject HttpClient Http
+
+<h1>Hello, world!</h1>
+
+<StardustDL.RazorComponents.Markdown.MarkdownRenderer Value="@MarkdownText" />
+
+@code {
+    public string MarkdownText;
+    private string _rawMarkdown;
+    private ReplacementConfig _replacementConfig;
+    private const string ReplacementPrefix = "{{";
+    private const string ReplacementSuffix = "}}";
+
+    private Timer _timer;
+    private Dictionary<string, IReplacer> _replacers = new Dictionary<string, IReplacer> {{ "SvcBusMessageInfo", new SvcBusMessageInfo()}};
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        var replacementConfigJson = await Http.GetStringAsync("data/article2.json"); // this contains config of where to fetch replacement data, should not change
+        _replacementConfig = JsonSerializer.Deserialize<ReplacementConfig>(replacementConfigJson);
+
+        _rawMarkdown = await Http.GetStringAsync("data/article2.md");
+        MarkdownText = await ReplaceTokens();
+
+        _timer = new Timer(async (object stateInfo) =>
+        {
+            MarkdownText = await ReplaceTokens();
+            StateHasChanged();
+        }, new AutoResetEvent(false), 1000, 2000);
+    }
+
+    private async Task<string> ReplaceTokens()
+    {
+        var rawMarkdown = _rawMarkdown;
+
+        foreach (var replacement in _replacementConfig.Replacements)
+        {
+            var replacer = _replacers[replacement.Instruction];
+            var renderedValue = replacer.Render(replacement.Match);
+            rawMarkdown = rawMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", renderedValue);
+        }
+
+        return rawMarkdown;
+    }
+
+    public class Replacement
+    {
+        public string Match { get; set; }
+        public string Instruction { get; set; }
+    }
+
+    public class ReplacementConfig
+    {
+        public List<Replacement> Replacements { get; set; }
+    }
+
+    public interface IReplacer
+    {
+        string Render(string match);
+    }
+
+    public class SvcBusMessageInfo : IReplacer
+    {
+        public string Render(string queueName)
+        {
+            // query api for active message and dead letter counts
+            var random = new Random();
+
+            return $"{queueName}  AM:{random.Next(1, 1000)} DL:{random.Next(0, 100)}";
+        }
+    }
+}
+
