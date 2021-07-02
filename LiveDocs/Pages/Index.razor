@@ -5,13 +5,13 @@
 @using System.Threading
 @inject HttpClient Http
 
-<h1>Hello, world!</h1>
+<h1>LiveDocs index page</h1>
 
 <StardustDL.RazorComponents.Markdown.MarkdownRenderer Value="@MarkdownText" />
 
 @code {
-    public string MarkdownText;
-    private string _rawMarkdown;
+    public string MarkdownText = "";
+    private string _rawMarkdown = "";
     private ReplacementConfig _replacementConfig;
     private const string ReplacementPrefix = "{{";
     private const string ReplacementSuffix = "}}";
@@ -27,13 +27,14 @@
         _replacementConfig = JsonSerializer.Deserialize<ReplacementConfig>(replacementConfigJson);
 
         _rawMarkdown = await Http.GetStringAsync("data/article2.md");
+
         MarkdownText = await ReplaceTokens();
 
-        _timer = new Timer(async (object stateInfo) =>
-        {
-            MarkdownText = await ReplaceTokens();
-            StateHasChanged();
-        }, new AutoResetEvent(false), 1000, 2000);
+        //_timer = new Timer(async (object stateInfo) =>
+        //{
+        //    MarkdownText = await ReplaceTokens();
+        //    StateHasChanged();
+        //}, new AutoResetEvent(false), 1000, 2000);
     }
 
     private async Task<string> ReplaceTokens()
