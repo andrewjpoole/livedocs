@@ -3,6 +3,10 @@
     {
       "Match": "swift-bacs-inbound-message",
       "Instruction": "SvcBusMessageInfo"
+    },
+    {
+      "Match": "livedocs.sp_get_day2_stats",
+      "Instruction": "SqlStoredProcInfo"
     }
   ] 
 }
