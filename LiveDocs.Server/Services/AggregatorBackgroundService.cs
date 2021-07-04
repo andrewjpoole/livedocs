@@ -40,9 +40,13 @@ namespace LiveDocs.Server.Services
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
+            var testDataService = new TransactionTestData();
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(WaitTimeInMs);
+
+                await testDataService.InsertSomeRandomTransactionRows();
 
                 // for each due task? - json should also contain refresh period?
                 // consider using SimpleScheduler?
@@ -65,14 +69,12 @@ namespace LiveDocs.Server.Services
             foreach (var replacement in resourceDocumentation.Replacements)
             {
                 Console.WriteLine(replacement.Match);
-                //Console.WriteLine(rawMarkdown.Contains($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}"));
 
                 //if(!rawMarkdown.Contains($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}"))
                 //    continue;
 
                 var replacer = _replacers[replacement.Instruction];
                 var renderedValue = replacer.Render(replacement.Match);
-                //Console.WriteLine(renderedValue);
                 rawMarkdown = rawMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", renderedValue);
                 // TODO use spans
             }

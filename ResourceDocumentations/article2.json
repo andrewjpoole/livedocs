@@ -5,7 +5,27 @@
       "Instruction": "SvcBusMessageInfo"
     },
     {
-      "Match": "livedocs.sp_get_day2_stats",
+      "Match": "route-inbound-message",
+      "Instruction": "SvcBusMessageInfo"
+    },
+    {
+      "Match": "process-bacs-inbound-dc",
+      "Instruction": "SvcBusMessageInfo"
+    },
+    {
+      "Match": "process-bacs-inbound-dd",
+      "Instruction": "SvcBusMessageInfo"
+    },
+    {
+      "Match": "bacs-create-cash-transactions",
+      "Instruction": "SvcBusMessageInfo"
+    },
+    {
+      "Match": "bacs-send-webhook",
+      "Instruction": "SvcBusMessageInfo"
+    },
+    {
+      "Match": "livedocsdb.sp_get_day2_stats",
       "Instruction": "SqlStoredProcInfo"
     }
   ] 
