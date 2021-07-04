@@ -31,7 +31,7 @@ namespace LiveDocs.Server.Replacers
                 var columns = reader.GetColumnSchema();
                 foreach (var dbColumn in columns)
                 {
-                    sbColumnNames.Append($" {dbColumn.ColumnName}&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;|");
+                    sbColumnNames.Append($" {dbColumn.ColumnName}&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;|");
                     sbColumnAlignment.Append(" --- |");
                 }
 
@@ -40,7 +40,10 @@ namespace LiveDocs.Server.Replacers
                     sbRows.Append("\n|");
                     foreach (var dbColumn in columns)
                     {
-                        sbRows.Append($" {reader[dbColumn.ColumnName]} |");
+                        if(dbColumn.DataTypeName == "money")
+                            sbRows.Append($" {((decimal)reader[dbColumn.ColumnName]):C} |");
+                        else
+                            sbRows.Append($" {reader[dbColumn.ColumnName]} |");
                     }
                 }
 
