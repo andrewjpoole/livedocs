@@ -1,27 +1,27 @@
 ﻿{
   "Replacements": [
     {
-      "Match": "swift-bacs-inbound-message",
+      "Match": "bacs-swift-inbound-payment-requests",
       "Instruction": "SvcBusMessageInfo"
     },
     {
-      "Match": "route-inbound-message",
+      "Match": "iso-router-inbound-payment-request",
       "Instruction": "SvcBusMessageInfo"
     },
     {
-      "Match": "process-bacs-inbound-dc",
+      "Match": "bacs-process-pending-credit-transaction",
       "Instruction": "SvcBusMessageInfo"
     },
     {
-      "Match": "process-bacs-inbound-dd",
+      "Match": "bacs-process-pending-debit-transaction",
       "Instruction": "SvcBusMessageInfo"
     },
     {
-      "Match": "bacs-create-cash-transactions",
+      "Match": "bacs-outbound-batched-messages",
       "Instruction": "SvcBusMessageInfo"
     },
     {
-      "Match": "bacs-send-webhook",
+      "Match": "swift-send-message-request-queue",
       "Instruction": "SvcBusMessageInfo"
     },
     {

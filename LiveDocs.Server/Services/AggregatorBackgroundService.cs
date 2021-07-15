@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LiveDocs.Server.Replacements;
 using LiveDocs.Server.Replacers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace LiveDocs.Server.Services
@@ -20,21 +21,21 @@ namespace LiveDocs.Server.Services
         private const string ReplacementSuffix = "}}";
         private Dictionary<string, ResourceDocumentation> _resourceDocumentations = new();
         private Dictionary<string, IReplacer> _replacers;
-
-        public AggregatorBackgroundService()
+        
+        public AggregatorBackgroundService(IConfiguration configuration)
         {
-            _replacers = new Dictionary<string, IReplacer>
+            _replacers = new Dictionary<string, IReplacer> // TODO get these from DI
             {
-                {"SvcBusMessageInfo", new SvcBusMessageInfo()},
-                {"SqlStoredProcInfo", new SqlStoredProcInfo()}
+                {"SvcBusMessageInfo", new SvcBusMessageInfo(new AzureRMApiClient(new AzureIAMTokenFetcher(configuration), configuration), configuration)},
+                {"SqlStoredProcInfo", new SqlStoredProcInfo(configuration)}
             };
             
             // hardcode for now...
             _resourceDocumentations.Add("test", new ResourceDocumentation
             {
                 Name = "test",
-                RawMarkdown = File.ReadAllText("C:\\dev\\livedocs\\ResourceDocumentations\\article2.md"),
-                Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText("C:\\dev\\livedocs\\ResourceDocumentations\\article2.json")).Replacements
+                RawMarkdown = File.ReadAllText("C:\\git\\livedocs\\ResourceDocumentations\\article2.md"),
+                Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText("C:\\git\\livedocs\\ResourceDocumentations\\article2.json")).Replacements
             });
         }
 
@@ -74,7 +75,7 @@ namespace LiveDocs.Server.Services
                 //    continue;
 
                 var replacer = _replacers[replacement.Instruction];
-                var renderedValue = replacer.Render(replacement.Match);
+                var renderedValue = await replacer.Render(replacement.Match);
                 rawMarkdown = rawMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", renderedValue);
                 // TODO use spans
             }

@@ -1,39 +1,34 @@
 using System;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using LiveDocs.Server.Models;
+using LiveDocs.Server.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace LiveDocs.Server.Replacers
 {
     public class SvcBusMessageInfo : IReplacer
     {
-        private int _activeMessageCount;
-        private int _deadLetterCount;
-        private int _goingUpCount;
-        private bool _goingUp = true;
+        private readonly IAzureRMApiClient _azureRmApiClient;
+        private readonly IConfiguration _serviceBusConfiguration;
+        private readonly string _subscriptionId;
 
-        public string Render(string dbAndStoredProcName)
+        public SvcBusMessageInfo(IAzureRMApiClient azureRmApiClient, IConfiguration configuration)
         {
-            // query api for active message and dead letter counts
-            var random = new Random();
+            _azureRmApiClient = azureRmApiClient;
+            _subscriptionId = configuration.GetSection("livedocs")["subscriptionId"];
+            _serviceBusConfiguration = configuration.GetSection("livedocs").GetSection("serviceBus");
+        }
 
-            // spend some time going up and then switch etc
-            _goingUpCount += 1;
-            if (_goingUpCount > 6)
-            {
-                _goingUp = !_goingUp;
-                _goingUpCount = 0;
-            }
+        public async Task<string> Render(string queueName)
+        {
+            var resourceGroup = _serviceBusConfiguration["resourceGroupName"];
+            var serviceBusNamespace = _serviceBusConfiguration["namespaceName"];
 
-            if(_goingUp)
-                _activeMessageCount += random.Next(1, 1000);
-            else
-                _activeMessageCount -= random.Next(1, _activeMessageCount);
-            
-            if (_goingUp)
-                _deadLetterCount += random.Next(1, 100);
+            var requestUri = $"subscriptions/{_subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.ServiceBus/namespaces/{serviceBusNamespace}/queues/{queueName}?api-version=2017-04-01";
+            var stats = await _azureRmApiClient.Query<ServiceBusGetQueueResponse>(requestUri);
 
-            if (random.Next(1, 10) > 7)
-                _deadLetterCount = 0;
-
-            return $"{dbAndStoredProcName}  AM:{_activeMessageCount} DL:{_deadLetterCount}";
+            return $"{queueName}  AM fa:fa-envelope-open:{stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.activeMessageCount} SM fa:fa-clock:{stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.scheduledMessageCount} DL fa:fa-book-dead:{stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.deadLetterMessageCount}";
         }
     }
 }
