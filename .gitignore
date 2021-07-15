@@ -350,4 +350,4 @@ MigrationBackup/
 .ionide/
 
 # dev config files
-.Development.json
+appsettings.Development.json
