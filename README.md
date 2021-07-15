@@ -22,12 +22,17 @@ ideally the backend will push changes to any connected frontend clients, who wil
 
 ## TODO
 
-* resource config discovery, url to devops + walk repos? or list of urls?
+* serve Blazor Wasm app from server
+* add Azure AD auth
+* add actual SvcBusMessageInfo Api implementation 
+* split dummy data creation out to seperate web app and improve - queue actual messages*
+* switch to spans for replacements for perf
+* replacements should have refresh schedule defined in json, only query if someone is browsing?
 * frontend should list available resources? and/or define in route?
+* resource config discovery, url to devops + walk repos? or list of urls?
+* frontend should have have menu/treeview of resources etc
 * backend should Push rather than frontend pull, web sockets/signalR etc?
-* replacements should have refresh schedule defined in json
-* switch to spans for replacements
-* switch frontend/fix issue where scroll position not preserved
+* switch frontend/fix issue where scroll position not preserved and/or pause updating etc
 * more replacements API call, Elastic query, App Insights query?
 * better styling
 

@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
+
 namespace LiveDocs.Server.Replacers
 {
     public interface IReplacer
     {
-        string Render(string dbAndStoredProcName);
+        Task<string> Render(string dbAndStoredProcName);
     }
 }

@@ -1,13 +1,22 @@
 using System;
 using System.Data;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
 namespace LiveDocs.Server.Replacers
 {
     public class SqlStoredProcInfo : IReplacer
     {
-        public string Render(string dbAndStoredProcName)
+        private readonly IConfiguration _configuration;
+
+        public SqlStoredProcInfo(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task<string> Render(string dbAndStoredProcName)
         {
             try
             {
@@ -15,7 +24,9 @@ namespace LiveDocs.Server.Replacers
                 var dbName = dbAndStoredProcNameParts[0];
                 var sprocName = dbAndStoredProcNameParts[1];
 
-                using var conn = new SqlConnection($"Server=localhost\\SQLEXPRESS;Database={dbName};Trusted_Connection=True;");
+                var connectionString = _configuration.GetConnectionString(dbName);
+
+                using var conn = new SqlConnection(connectionString);
                 conn.Open();
 
                 var command = new SqlCommand(sprocName, conn);
@@ -27,15 +38,15 @@ namespace LiveDocs.Server.Replacers
                 var sbColumnAlignment = new StringBuilder("|");
                 var sbRows = new StringBuilder();
 
-                using var reader = command.ExecuteReader();
-                var columns = reader.GetColumnSchema();
+                await using var reader = await command.ExecuteReaderAsync();
+                var columns = await reader.GetColumnSchemaAsync();
                 foreach (var dbColumn in columns)
                 {
                     sbColumnNames.Append($" {dbColumn.ColumnName}&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;|");
                     sbColumnAlignment.Append(" --- |");
                 }
 
-                while (reader.Read())
+                while (await reader.ReadAsync())
                 {
                     sbRows.Append("\n|");
                     foreach (var dbColumn in columns)
