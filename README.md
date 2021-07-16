@@ -23,7 +23,7 @@ ideally the backend will push changes to any connected frontend clients, who wil
 ## TODO
 
 [x] serve Blazor Wasm app from server
-[ ] add Azure AD auth to frontend (anyone from organisation)
+[x] add Azure AD auth to frontend (anyone from organisation)
 [x] add Azure AD auth to server (service principal with appropriate permissions)
 [x] add actual SvcBusMessageInfo Api implementation 
 [ ] deploy to AppService in test environment, could be manual from VS at first? (medium)
