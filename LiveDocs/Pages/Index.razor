@@ -1,5 +1,7 @@
 ﻿@page "/"
+@attribute [Authorize]
 @using System.Threading
+@using Microsoft.AspNetCore.Authorization
 @inject HttpClient Http
 
 <p>LiveDocs index page</p>
@@ -7,7 +9,7 @@
 <StardustDL.RazorComponents.Markdown.MarkdownRenderer Value="@MarkdownText" />
 
 @code {
-    public string MarkdownText = "";
+    public string MarkdownText = "#### fetching latest markdown...";
     private Timer _timer;
 
     protected override async Task OnInitializedAsync()
@@ -33,5 +35,5 @@
     }
 
 }
-    
+
 
