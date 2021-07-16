@@ -4,10 +4,12 @@ using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using LiveDocs.Server.config;
 using LiveDocs.Server.Replacements;
 using LiveDocs.Server.Replacers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace LiveDocs.Server.Services
 {
@@ -16,27 +18,31 @@ namespace LiveDocs.Server.Services
     /// </summary>
     public class AggregatorBackgroundService : BackgroundService, IAggregatorBackgroundService
     {
+        private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
         private const int WaitTimeInMs = 5000;
         private const string ReplacementPrefix = "{{";
         private const string ReplacementSuffix = "}}";
         private Dictionary<string, ResourceDocumentation> _resourceDocumentations = new();
         private Dictionary<string, IReplacer> _replacers;
         
-        public AggregatorBackgroundService(IConfiguration configuration)
+        public AggregatorBackgroundService(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, IConfiguration configuration)
         {
-            _replacers = new Dictionary<string, IReplacer> // TODO get these from DI
+            _liveDocsOptions = liveDocsOptions;
+            _replacers = new Dictionary<string, IReplacer> // TODO get these from DI -> probably use the interface name as the instruction?
             {
-                {"SvcBusMessageInfo", new SvcBusMessageInfo(new AzureRMApiClient(new AzureIAMTokenFetcher(configuration), configuration), configuration)},
+                {"SvcBusMessageInfo", new SvcBusMessageInfo(new AzureRMApiClient(new AzureIAMTokenFetcher(azureAdOptions), liveDocsOptions), azureAdOptions, liveDocsOptions)},
                 {"SqlStoredProcInfo", new SqlStoredProcInfo(configuration)}
             };
-            
-            // hardcode for now...
-            _resourceDocumentations.Add("test", new ResourceDocumentation
+
+            foreach (var file in _liveDocsOptions.Value.Files)
             {
-                Name = "test",
-                RawMarkdown = File.ReadAllText("C:\\git\\livedocs\\ResourceDocumentations\\article2.md"),
-                Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText("C:\\git\\livedocs\\ResourceDocumentations\\article2.json")).Replacements
-            });
+                _resourceDocumentations.Add("test", new ResourceDocumentation
+                {
+                    Name = file.Name,
+                    RawMarkdown = File.ReadAllText(file.MdPath),
+                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText(file.JsonPath)).Replacements
+                });
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -49,8 +55,8 @@ namespace LiveDocs.Server.Services
 
                 await testDataService.InsertSomeRandomTransactionRows();
 
-                // for each due task? - json should also contain refresh period?
-                // consider using SimpleScheduler?
+                // TODO for each due task? - json should also contain refresh period?
+                // TODO consider using SimpleScheduler?
                 foreach (var resourceDocumentation in _resourceDocumentations.Values)
                 {
                     await ReplaceTokens(resourceDocumentation);
@@ -65,22 +71,44 @@ namespace LiveDocs.Server.Services
 
         private async Task ReplaceTokens(ResourceDocumentation resourceDocumentation)
         {
-            var rawMarkdown = resourceDocumentation.RawMarkdown;
-            
-            foreach (var replacement in resourceDocumentation.Replacements)
+            try
             {
-                Console.WriteLine(replacement.Match);
+                var rawMarkdown = resourceDocumentation.RawMarkdown;
 
-                //if(!rawMarkdown.Contains($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}"))
-                //    continue;
+                foreach (var replacement in resourceDocumentation.Replacements)
+                {
+                    Console.WriteLine(replacement.Match);
 
+                    // TODO only run replacer if value is found in markdown?
+                    //if(!rawMarkdown.Contains($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}"))
+                    //    continue;
+
+                    // TODO use spans instead
+                    var replacementValue = await FetchReplacementValue(replacement);
+                    rawMarkdown = rawMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", replacementValue);
+                }
+
+                resourceDocumentation.RenderedMarkdown = rawMarkdown;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        private async Task<string> FetchReplacementValue(Replacement replacement)
+        {
+            try
+            {
                 var replacer = _replacers[replacement.Instruction];
                 var renderedValue = await replacer.Render(replacement.Match);
-                rawMarkdown = rawMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", renderedValue);
-                // TODO use spans
+                return renderedValue;
             }
-
-            resourceDocumentation.RenderedMarkdown = rawMarkdown;
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return $"Failed to replace {replacement.Match}!";
+            }
         }
     }
 }
