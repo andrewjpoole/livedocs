@@ -23,7 +23,7 @@
 
     public async Task<string> FetchMarkdown()
     {
-        var response = await Http.GetFromJsonAsync<GetLiveDocsResponse>("https://localhost:5001/api/v1/livedocs/test");
+        var response = await Http.GetFromJsonAsync<GetLiveDocsResponse>("api/v1/livedocs/test");
         return response.Markdown;
     }
 

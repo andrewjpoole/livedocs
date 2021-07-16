@@ -1,13 +1,15 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Linq;
 using AJP.MediatrEndpoints;
 using AJP.MediatrEndpoints.EndpointRegistration;
+using LiveDocs.Server.config;
 using LiveDocs.Server.RequestHandlers;
 using LiveDocs.Server.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace LiveDocs.Server
 {
@@ -15,20 +17,33 @@ namespace LiveDocs.Server
     {
         private const string AllowSpecificOriginsPolicyName = "allowSpecificOrigins";
 
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options =>
-            {
-                options.AddPolicy(name: AllowSpecificOriginsPolicyName,
-                    builder =>
-                    {
-                        builder.WithOrigins("http://localhost:5002", "https://localhost:5003")
-                            .AllowAnyHeader()
-                            .AllowAnyMethod();
-                    });
-            });
+            //services.AddCors(options =>
+            //{
+            //    options.AddPolicy(name: AllowSpecificOriginsPolicyName,
+            //        builder =>
+            //        {
+            //            builder.WithOrigins("http://localhost:5002", "https://localhost:5003")
+            //                .AllowAnyHeader()
+            //                .AllowAnyMethod();
+            //        });
+            //});
+
+            services.Configure<StronglyTypedConfig.LiveDocs>(Configuration.GetSection(StronglyTypedConfig.LiveDocs.ConfigKey));
+            services.Configure<StronglyTypedConfig.AzureAd>(Configuration.GetSection(StronglyTypedConfig.AzureAd.ConfigKey));
+
+            services.AddControllersWithViews();
+            services.AddRazorPages();
 
             services.AddMediatrEndpoints(typeof(Startup));
 
@@ -44,16 +59,19 @@ namespace LiveDocs.Server
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseHttpsRedirection();
+            app.UseBlazorFrameworkFiles();
+            app.UseStaticFiles();
+
             app.UseRouting();
-            app.UseCors(AllowSpecificOriginsPolicyName);
+            //app.UseCors(AllowSpecificOriginsPolicyName);
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello World!");
-                });
-
+                endpoints.MapRazorPages();
+                endpoints.MapControllers();
+                endpoints.MapFallbackToFile("index.html");
+                
                 endpoints.MapGroupOfEndpointsForAPath("/api/v1/livedocs", "LiveDocs")
                     .WithGet<GetLiveDocsRequest, GetLiveDocsResponse>("/{resourceName}");
             });

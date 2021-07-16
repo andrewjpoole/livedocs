@@ -1,8 +1,11 @@
 using System;
+using System.Data;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using LiveDocs.Server.config;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace LiveDocs.Server.Services
 {
@@ -10,12 +13,12 @@ namespace LiveDocs.Server.Services
     {
         private readonly IAzureIAMTokenFetcher _tokenFetcher;
         private readonly string _azureResourceManagementApiBaseUri;
+        private const string AuthHeaderKeyName = "Authorization";
 
-        public AzureRMApiClient(IAzureIAMTokenFetcher tokenFetcher, IConfiguration configuration)
+        public AzureRMApiClient(IAzureIAMTokenFetcher tokenFetcher, IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions)
         {
             _tokenFetcher = tokenFetcher;
-            _azureResourceManagementApiBaseUri =
-                configuration.GetSection("livedocs")["azureResourceManagementApiBaseUri"];
+            _azureResourceManagementApiBaseUri = liveDocsOptions.Value.AzureResourceManagementApiBaseUri;
         }
 
         public async Task<T> Query<T>(string uri)
@@ -28,7 +31,7 @@ namespace LiveDocs.Server.Services
             using var httpClient = new HttpClient();
             httpClient.BaseAddress = new Uri(_azureResourceManagementApiBaseUri);
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            request.Headers.Add("Authorization", _tokenFetcher.BearerHeaderValue);
+            request.Headers.Add(AuthHeaderKeyName, _tokenFetcher.BearerHeaderValue);
             var response = await httpClient.SendAsync(request);
 
             if (!response.IsSuccessStatusCode)
