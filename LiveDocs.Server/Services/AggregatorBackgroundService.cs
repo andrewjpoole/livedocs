@@ -36,11 +36,16 @@ namespace LiveDocs.Server.Services
 
             foreach (var file in _liveDocsOptions.Value.Files)
             {
-                _resourceDocumentations.Add("test", new ResourceDocumentation
+                _resourceDocumentations.Add(file.Name, new ResourceDocumentation
                 {
                     Name = file.Name,
-                    RawMarkdown = File.ReadAllText(file.MdPath),
-                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText(file.JsonPath)).Replacements
+                    RawMarkdown = File.ReadAllText(file.MdPath), // TODO when should this be checked for updates?
+                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText(file.JsonPath)).Replacements // TODO when should this be checked for updates ?
+                    // add schedule strings to json
+                    // register scheduled tasks for replacements?
+                    // register handlers somewhere up front
+                    // tasks fire on their schedule's
+                    // resulting replacement text goes on a property on this object?
                 });
             }
         }
