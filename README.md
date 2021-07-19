@@ -22,20 +22,20 @@ ideally the backend will push changes to any connected frontend clients, who wil
 
 ## TODO
 
-[x] serve Blazor Wasm app from server
-[x] add Azure AD auth to frontend (anyone from organisation)
-[x] add Azure AD auth to server (service principal with appropriate permissions)
-[x] add actual SvcBusMessageInfo Api implementation 
-[ ] deploy to AppService in test environment, could be manual from VS at first? (medium)
-[ ] switch to Spans for replacements for perf (small)
-[ ] fix issue where scroll position not preserved and/or add pause updating button etc (small)
-[ ] replacements should have refresh schedule defined in json, consider using SimpleScheduler? (small/medium)
-[ ] server should provide Api of available resources (small)
-[ ] frontend should list available resources in a menu/treeview? and/or define in route? (small)
-[ ] resource config discovery, url to devops + walk repos? or lookup from json/yaml file uri? (medium)
-[ ] server should Push rather than frontend pull, web sockets/signalR etc? (large)
-[ ] only query if someone is browsing? depend number of active clients (?)
-[ ] more replacements API call, Elastic query, App Insights query? (medium)
-[ ] better styling (?)
-[ ] split dummy data creation out to seperate web app and improve - queue actual messages* (medium)
+* [x] serve Blazor Wasm app from server
+* [x] add Azure AD auth to frontend (anyone from organisation)
+* [x] add Azure AD auth to server (service principal with appropriate permissions)
+* [x] add actual SvcBusMessageInfo Api implementation 
+* [ ] deploy to AppService in test environment, could be manual from VS at first? (medium)
+* [ ] switch to Spans for replacements for perf (small)
+* [ ] fix issue where scroll position not preserved and/or add pause updating button etc (small)
+* [ ] replacements should have refresh schedule defined in json, consider using SimpleScheduler? (small/medium)
+* [ ] server should provide Api of available resources (small)
+* [ ] frontend should list available resources in a menu/treeview? and/or define in route? (small)
+* [ ] resource config discovery, url to devops + walk repos? or lookup from json/yaml file uri? (medium)
+* [ ] server should Push rather than frontend pull, web sockets/signalR etc? (large)
+* [ ] only query if someone is browsing? depend number of active clients (?)
+* [ ] more replacements API call, Elastic query, App Insights query? (medium)
+* [ ] better styling (?)
+* [ ] split dummy data creation out to seperate web app and improve - queue actual messages* (medium)
 
