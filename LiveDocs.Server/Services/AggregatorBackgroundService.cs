@@ -21,8 +21,8 @@ namespace LiveDocs.Server.Services
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
         private readonly IServiceProvider _serviceProvider;
         private const int WaitTimeInMs = 5000;
-        private const string ReplacementPrefix = "{{";
-        private const string ReplacementSuffix = "}}";
+        private const string ReplacementPrefix = "<<";
+        private const string ReplacementSuffix = ">>";
         private Dictionary<string, ResourceDocumentation> _resourceDocumentations = new();
         
         public AggregatorBackgroundService(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, IConfiguration configuration, IServiceProvider serviceProvider)
