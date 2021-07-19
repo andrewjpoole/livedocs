@@ -7,11 +7,11 @@ using Microsoft.Extensions.Configuration;
 
 namespace LiveDocs.Server.Replacers
 {
-    public class SqlStoredProcInfo : IReplacer
+    public class SqlStoredProcInfoReplacer : ISqlStoredProcInfoReplacer
     {
         private readonly IConfiguration _configuration;
 
-        public SqlStoredProcInfo(IConfiguration configuration)
+        public SqlStoredProcInfoReplacer(IConfiguration configuration)
         {
             _configuration = configuration;
         }

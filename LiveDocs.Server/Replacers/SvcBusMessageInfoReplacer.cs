@@ -9,13 +9,13 @@ using Microsoft.Extensions.Options;
 
 namespace LiveDocs.Server.Replacers
 {
-    public class SvcBusMessageInfo : IReplacer
+    public class SvcBusMessageInfoReplacer : ISvcBusMessageInfoReplacer
     {
         private readonly IAzureRMApiClient _azureRmApiClient;
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
         private readonly string _subscriptionId;
 
-        public SvcBusMessageInfo(IAzureRMApiClient azureRmApiClient, IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions)
+        public SvcBusMessageInfoReplacer(IAzureRMApiClient azureRmApiClient, IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions)
         {
             _azureRmApiClient = azureRmApiClient;
             _liveDocsOptions = liveDocsOptions;

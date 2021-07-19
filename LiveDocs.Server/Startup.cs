@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using AJP.MediatrEndpoints;
 using AJP.MediatrEndpoints.EndpointRegistration;
 using LiveDocs.Server.config;
+using LiveDocs.Server.Replacers;
 using LiveDocs.Server.RequestHandlers;
 using LiveDocs.Server.Services;
 using Microsoft.Extensions.Configuration;
@@ -28,19 +30,13 @@ namespace LiveDocs.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddCors(options =>
-            //{
-            //    options.AddPolicy(name: AllowSpecificOriginsPolicyName,
-            //        builder =>
-            //        {
-            //            builder.WithOrigins("http://localhost:5002", "https://localhost:5003")
-            //                .AllowAnyHeader()
-            //                .AllowAnyMethod();
-            //        });
-            //});
-
             services.Configure<StronglyTypedConfig.LiveDocs>(Configuration.GetSection(StronglyTypedConfig.LiveDocs.ConfigKey));
             services.Configure<StronglyTypedConfig.AzureAd>(Configuration.GetSection(StronglyTypedConfig.AzureAd.ConfigKey));
+
+            services.AddSingleton<IAzureIAMTokenFetcher, AzureIAMTokenFetcher>();
+            services.AddSingleton<IAzureRMApiClient, AzureRMApiClient>();
+            services.AddSingleton<ISvcBusMessageInfoReplacer, SvcBusMessageInfoReplacer>();
+            services.AddSingleton<ISqlStoredProcInfoReplacer, SqlStoredProcInfoReplacer>();
 
             services.AddControllersWithViews();
             services.AddRazorPages();
@@ -64,7 +60,6 @@ namespace LiveDocs.Server
             app.UseStaticFiles();
 
             app.UseRouting();
-            //app.UseCors(AllowSpecificOriginsPolicyName);
 
             app.UseEndpoints(endpoints =>
             {
@@ -77,8 +72,4 @@ namespace LiveDocs.Server
             });
         }
     }
-
-    // resource discoverer
-    // aggregator - does replacements on a timer etc
-    // API serves up data from the aggregator, switch out for signalr etc?
 }

@@ -2,31 +2,51 @@
   "Replacements": [
     {
       "Match": "bacs-swift-inbound-payment-requests",
-      "Instruction": "SvcBusMessageInfo"
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "iso-router-inbound-payment-request",
-      "Instruction": "SvcBusMessageInfo"
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-process-pending-credit-transaction",
-      "Instruction": "SvcBusMessageInfo"
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-process-pending-debit-transaction",
-      "Instruction": "SvcBusMessageInfo"
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-outbound-batched-messages",
-      "Instruction": "SvcBusMessageInfo"
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "swift-send-message-request-queue",
-      "Instruction": "SvcBusMessageInfo"
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "livedocsdb.sp_get_day2_stats",
-      "Instruction": "SqlStoredProcInfo"
-    }
+      "Instruction": "ISqlStoredProcInfoReplacer",
+      "Schedule": "every|1mm",
+      "OnlyRunWhenClientsConnected": true
+    },
+    //{
+    //  "Match": "std18FileInfo",
+    //  "Instruction": "IStd18FileInfoReplacer",
+    //  "Schedule": "everyStartingAt|1d|02:00:00",
+    //  "OnlyRunWhenClientsConnected": false
+    //}
   ] 
 }
