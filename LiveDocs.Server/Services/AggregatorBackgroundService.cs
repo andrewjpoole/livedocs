@@ -19,20 +19,16 @@ namespace LiveDocs.Server.Services
     public class AggregatorBackgroundService : BackgroundService, IAggregatorBackgroundService
     {
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
+        private readonly IServiceProvider _serviceProvider;
         private const int WaitTimeInMs = 5000;
         private const string ReplacementPrefix = "{{";
         private const string ReplacementSuffix = "}}";
         private Dictionary<string, ResourceDocumentation> _resourceDocumentations = new();
-        private Dictionary<string, IReplacer> _replacers;
         
-        public AggregatorBackgroundService(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, IConfiguration configuration)
+        public AggregatorBackgroundService(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, IConfiguration configuration, IServiceProvider serviceProvider)
         {
             _liveDocsOptions = liveDocsOptions;
-            _replacers = new Dictionary<string, IReplacer> // TODO get these from DI -> probably use the interface name as the instruction?
-            {
-                {"SvcBusMessageInfo", new SvcBusMessageInfo(new AzureRMApiClient(new AzureIAMTokenFetcher(azureAdOptions), liveDocsOptions), azureAdOptions, liveDocsOptions)},
-                {"SqlStoredProcInfo", new SqlStoredProcInfo(configuration)}
-            };
+            _serviceProvider = serviceProvider;
 
             foreach (var file in _liveDocsOptions.Value.Files)
             {
@@ -40,7 +36,7 @@ namespace LiveDocs.Server.Services
                 {
                     Name = file.Name,
                     RawMarkdown = File.ReadAllText(file.MdPath), // TODO when should this be checked for updates?
-                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText(file.JsonPath)).Replacements // TODO when should this be checked for updates ?
+                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText(file.JsonPath), new JsonSerializerOptions { AllowTrailingCommas = true, ReadCommentHandling = JsonCommentHandling.Skip }).Replacements // TODO when should this be checked for updates ?
                     // add schedule strings to json
                     // register scheduled tasks for replacements?
                     // register handlers somewhere up front
@@ -105,7 +101,7 @@ namespace LiveDocs.Server.Services
         {
             try
             {
-                var replacer = _replacers[replacement.Instruction];
+                var replacer = (IReplacer)_serviceProvider.GetServiceByRegisteredTypeName(replacement.Instruction);
                 var renderedValue = await replacer.Render(replacement.Match);
                 return renderedValue;
             }
