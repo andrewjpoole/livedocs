@@ -13,16 +13,16 @@ Some documentation should go here:
 
 paragraph about Bacs day 3 processing etc
 
-{{livedocsdb.sp_get_day2_stats}}
+<<livedocsdb.sp_get_day2_stats>>
 
 ```mermaid
 graph TD
-A[swift infrastructure] -->|{{bacs-swift-inbound-payment-requests}}| B(swift-bacs)
-B -->|{{iso-router-inbound-payment-request}}| C{IsoRouter}
-C -->|{{bacs-process-pending-credit-transaction}}| D[BacsInboundPayments]
-C -->|{{bacs-process-pending-debit-transaction}}| D[BacsInboundPayments]
-D -->|{{bacs-outbound-batched-messages}}| E[Accounts]
-D -->|{{swift-send-message-request-queue}}| F[WebHooks]
+A[swift infrastructure] -->|<<bacs-swift-inbound-payment-requests>>| B(swift-bacs)
+B -->|<<iso-router-inbound-payment-request>>| C{IsoRouter}
+C -->|<<bacs-process-pending-credit-transaction>>| D[BacsInboundPayments]
+C -->|<<bacs-process-pending-debit-transaction>>| D[BacsInboundPayments]
+D -->|<<bacs-outbound-batched-messages>>| E[Accounts]
+D -->|<<swift-send-message-request-queue>>| F[WebHooks]
 ```
 
 ```mermaid
