@@ -38,6 +38,7 @@ namespace LiveDocs.Server
             services.AddSingleton<IAzureRMApiClient, AzureRMApiClient>();
             services.AddSingleton<ISvcBusMessageInfoReplacer, SvcBusMessageInfoReplacer>();
             services.AddSingleton<ISqlStoredProcInfoReplacer, SqlStoredProcInfoReplacer>();
+            services.AddSingleton<IStd18InfoReplacer, Std18InfoReplacer>();
 
             services.AddSimpleScheduler(true);
 
