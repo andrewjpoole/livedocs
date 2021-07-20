@@ -1,8 +1,10 @@
 ﻿@page "/"
+@implements IAsyncDisposable
 @attribute [Authorize]
 @using System.Threading
 @using Microsoft.AspNetCore.Authorization
 @inject HttpClient Http
+@inject IJSRuntime JS
 
 <p>LiveDocs index page</p>
 
@@ -11,6 +13,7 @@
 @code {
     public string MarkdownText = "#### waiting for markdown and data to be rendered...";
     private Timer _timer;
+    private IJSObjectReference _scrollInterface;
 
     protected override async Task OnInitializedAsync()
     {
@@ -18,8 +21,10 @@
 
         _timer = new Timer(async (object stateInfo) =>
         {
+            var scrollState = await _scrollInterface.InvokeAsync<System.Drawing.Point>("getScroll");
             MarkdownText = await FetchMarkdown();
             StateHasChanged();
+            await _scrollInterface.InvokeVoidAsync("setScroll", scrollState.X, scrollState.Y);
         }, new AutoResetEvent(false), 5500, 5000);
     }
 
@@ -34,6 +39,21 @@
         public string Markdown { get; init; }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _scrollInterface = await JS.InvokeAsync<IJSObjectReference>("import", "./scroll-interface.js");
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (_scrollInterface is not null)
+        {
+            await _scrollInterface.DisposeAsync();
+        }
+    }
 }
 
 
