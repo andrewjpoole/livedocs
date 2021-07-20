@@ -17,8 +17,6 @@ paragraph about Bacs day 3 processing etc
 
 <<bacsdb.uspGetDay3SettlementOfTodayGroupedByTransactionStatus>>
 
-
-
 ```mermaid
 graph TD
 A[swift infrastructure] -->|<<bacs-swift-inbound-payment-requests>>| B(swift-bacs)
