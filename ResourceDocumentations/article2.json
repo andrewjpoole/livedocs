@@ -39,7 +39,7 @@
     {
       "Match": "livedocsdb.sp_get_day2_stats",
       "Instruction": "ISqlStoredProcInfoReplacer",
-      "Schedule": "every|1mm",
+      "Schedule": "every|25ss",
       "OnlyRunWhenClientsConnected": true
     },
     //{

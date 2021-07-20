@@ -4,16 +4,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace LiveDocs.Server.Replacers
 {
     public class SqlStoredProcInfoReplacer : ISqlStoredProcInfoReplacer
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<SqlStoredProcInfoReplacer> _logger;
 
-        public SqlStoredProcInfoReplacer(IConfiguration configuration)
+        public SqlStoredProcInfoReplacer(IConfiguration configuration, ILogger<SqlStoredProcInfoReplacer> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<string> Render(string dbAndStoredProcName)
@@ -62,7 +65,7 @@ namespace LiveDocs.Server.Replacers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError(e, $"Error thrown while rendering {dbAndStoredProcName}");
                 throw;
             }
         }
