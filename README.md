@@ -29,7 +29,7 @@ ideally the backend will push changes to any connected frontend clients, who wil
 * [ ] deploy to AppService in test environment, could be manual from VS at first? (medium)
 * [ ] switch to Spans for replacements for perf (small)
 * [ ] fix issue where scroll position not preserved and/or add pause updating button etc (small)
-* [ ] replacements should have refresh schedule defined in json, consider using SimpleScheduler? (small/medium)
+* [x] replacements should have refresh schedule defined in json, consider using SimpleScheduler? (small/medium)
 * [ ] server should provide Api of available resources (small)
 * [ ] frontend should list available resources in a menu/treeview? and/or define in route? (small)
 * [ ] resource config discovery, url to devops + walk repos? or lookup from json/yaml file uri? (medium)
@@ -38,4 +38,6 @@ ideally the backend will push changes to any connected frontend clients, who wil
 * [ ] more replacements API call, Elastic query, App Insights query? (medium)
 * [ ] better styling (?)
 * [ ] split dummy data creation out to seperate web app and improve - queue actual messages* (medium)
+* [ ] Consider storing some data in app insights? where it would be queryable outside of this app, flag in replacement config?
+* [ ] Consider if a cache with item expiry remove the need for a scheduler?
 
