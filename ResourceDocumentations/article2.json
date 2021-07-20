@@ -37,7 +37,7 @@
       "OnlyRunWhenClientsConnected": true
     },
     {
-      "Match": "livedocsdb.sp_get_day2_stats",
+      "Match": "bacs.uspGetDay3SettlementOfTodayGroupedByTransactionType",
       "Instruction": "ISqlStoredProcInfoReplacer",
       "Schedule": "every|25ss",
       "OnlyRunWhenClientsConnected": true
