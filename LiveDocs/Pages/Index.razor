@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/{page}"
 @attribute [Authorize]
 @using System.Threading
 @using Microsoft.AspNetCore.Authorization
@@ -9,6 +9,9 @@
 <StardustDL.RazorComponents.Markdown.MarkdownRenderer Value="@MarkdownText" />
 
 @code {
+    [Parameter]
+    public string Page { get; set; }
+
     public string MarkdownText = "#### waiting for markdown and data to be rendered...";
     private Timer _timer;
 
@@ -25,7 +28,7 @@
 
     public async Task<string> FetchMarkdown()
     {
-        var response = await Http.GetFromJsonAsync<GetLiveDocsResponse>("api/v1/livedocs/test");
+        var response = await Http.GetFromJsonAsync<GetLiveDocsResponse>("api/v1/livedocs/" + Page);
         return response.Markdown;
     }
 
