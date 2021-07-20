@@ -13,7 +13,7 @@ Some documentation should go here:
 
 paragraph about Bacs day 3 processing etc
 
-<<livedocsdb.sp_get_day2_stats>>
+<<bacsdb.uspGetDay3SettlementOfTodayGroupedByTransactionType>>
 
 ```mermaid
 graph TD
