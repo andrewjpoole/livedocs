@@ -72,6 +72,9 @@ namespace LiveDocs.Server
                 
                 endpoints.MapGroupOfEndpointsForAPath("/api/v1/livedocs", "LiveDocs")
                     .WithGet<GetLiveDocsRequest, GetLiveDocsResponse>("/{resourceName}");
+
+                endpoints.MapGroupOfEndpointsForAPath("/api/v1/resources", "LiveDocsResources")
+                    .WithGet<GetResourceDocumentationsRequest, GetResourceDocumentationsResponse>("/");
             });
         }
     }
