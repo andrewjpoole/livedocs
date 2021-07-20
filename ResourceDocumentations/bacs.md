@@ -15,6 +15,12 @@ paragraph about Bacs day 3 processing etc
 
 <<bacsdb.uspGetDay3SettlementOfTodayGroupedByTransactionType>>
 
+<<bacsdb.uspGetDay3SettlementOfTodayGroupedByTransactionStatus>>
+
+## Std18 File
+
+<<IStd18InfoReplaceer>>
+
 ```mermaid
 graph TD
 A[swift infrastructure] -->|<<bacs-swift-inbound-payment-requests>>| B(swift-bacs)
