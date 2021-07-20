@@ -37,7 +37,7 @@
       "OnlyRunWhenClientsConnected": true
     },
     {
-      "Match": "bacs.uspGetDay3SettlementOfTodayGroupedByTransactionType",
+      "Match": "bacsdb.uspGetDay3SettlementOfTodayGroupedByTransactionType",
       "Instruction": "ISqlStoredProcInfoReplacer",
       "Schedule": "every|25ss",
       "OnlyRunWhenClientsConnected": true
