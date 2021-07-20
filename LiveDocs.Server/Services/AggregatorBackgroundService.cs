@@ -108,17 +108,12 @@ namespace LiveDocs.Server.Services
         // Called by the RequestHandler
         public string GetLatestMarkdown(string resourceName)
         {
-            var testDataService = new TransactionTestData();
-            testDataService.InsertSomeRandomTransactionRows().GetAwaiter().GetResult();
-
-            //return _resourceDocumentations[resourceName].RenderedMarkdown;
             var resourceDocumentation = _resourceDocumentations[resourceName];
             var renderedMarkdown = resourceDocumentation.RawMarkdown;
 
             foreach (var replacement in resourceDocumentation.Replacements)
             {
                 // TODO use spans instead
-                //var replacementValue = await FetchReplacementValue(replacement);
                 renderedMarkdown = renderedMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", replacement.LatestReplacedData);
             }
 
