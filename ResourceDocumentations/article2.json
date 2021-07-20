@@ -42,6 +42,12 @@
       "Schedule": "every|25ss",
       "OnlyRunWhenClientsConnected": true
     },
+    {
+      "Match": "bacsdb.uspGetDay3SettlementOfTodayGroupedByTransactionStatus",
+      "Instruction": "ISqlStoredProcInfoReplacer",
+      "Schedule": "every|25ss",
+      "OnlyRunWhenClientsConnected": true
+    },
     //{
     //  "Match": "std18FileInfo",
     //  "Instruction": "IStd18FileInfoReplacer",
