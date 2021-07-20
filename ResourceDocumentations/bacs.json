@@ -1,0 +1,52 @@
+﻿{
+  "Replacements": [
+    {
+      "Match": "bacs-swift-inbound-payment-requests",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "iso-router-inbound-payment-request",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "bacs-process-pending-credit-transaction",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "bacs-process-pending-debit-transaction",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "bacs-outbound-batched-messages",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "swift-send-message-request-queue",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "bacsdb.uspGetDay3SettlementOfTodayGroupedByTransactionType",
+      "Instruction": "ISqlStoredProcInfoReplacer",
+      "Schedule": "every|25ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    //{
+    //  "Match": "std18FileInfo",
+    //  "Instruction": "IStd18FileInfoReplacer",
+    //  "Schedule": "everyStartingAt|1d|02:00:00",
+    //  "OnlyRunWhenClientsConnected": false
+    //}
+  ] 
+}
