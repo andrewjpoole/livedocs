@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using AJP.MediatrEndpoints;
 using AJP.MediatrEndpoints.EndpointRegistration;
+using AJP.SimpleScheduler;
 using LiveDocs.Server.config;
 using LiveDocs.Server.Replacers;
 using LiveDocs.Server.RequestHandlers;
@@ -38,13 +39,15 @@ namespace LiveDocs.Server
             services.AddSingleton<ISvcBusMessageInfoReplacer, SvcBusMessageInfoReplacer>();
             services.AddSingleton<ISqlStoredProcInfoReplacer, SqlStoredProcInfoReplacer>();
 
+            services.AddSimpleScheduler(true);
+
             services.AddControllersWithViews();
             services.AddRazorPages();
 
             services.AddMediatrEndpoints(typeof(Startup));
 
             services.AddSingleton<IAggregatorBackgroundService, AggregatorBackgroundService>();
-            services.AddHostedService(sp => (AggregatorBackgroundService)sp.GetService<IAggregatorBackgroundService>());
+            //services.AddHostedService(sp => (AggregatorBackgroundService)sp.GetService<IAggregatorBackgroundService>());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

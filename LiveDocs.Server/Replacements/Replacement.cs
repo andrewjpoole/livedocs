@@ -6,5 +6,6 @@ namespace LiveDocs.Server.Replacements
         public string Instruction { get; init; }
         public string Schedule { get; init; } public bool OnlyRunWhenClientsConnected { get; init; }
         public string LatestReplacedData { get; set; }
+        public string ParentResourceDocumentationName { get; set; }
     }
 }

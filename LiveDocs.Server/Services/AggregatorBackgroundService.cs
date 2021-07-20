@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+using AJP.SimpleScheduler.ScheduledTasks;
+using AJP.SimpleScheduler.ScheduledTaskStorage;
+using AJP.SimpleScheduler.TaskExecution;
 using LiveDocs.Server.config;
 using LiveDocs.Server.Replacements;
 using LiveDocs.Server.Replacers;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace LiveDocs.Server.Services
@@ -16,100 +17,99 @@ namespace LiveDocs.Server.Services
     /// <summary>
     /// Service which fetches markdown + configJson for a resource and serves markdown 
     /// </summary>
-    public class AggregatorBackgroundService : BackgroundService, IAggregatorBackgroundService
+    public class AggregatorBackgroundService : IAggregatorBackgroundService
     {
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<AggregatorBackgroundService> _logger;
         private const int WaitTimeInMs = 5000;
         private const string ReplacementPrefix = "<<";
         private const string ReplacementSuffix = ">>";
         private Dictionary<string, ResourceDocumentation> _resourceDocumentations = new();
         
-        public AggregatorBackgroundService(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, IConfiguration configuration, IServiceProvider serviceProvider)
+        public AggregatorBackgroundService(
+            IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, 
+            IServiceProvider serviceProvider, 
+            IScheduledTaskRepository scheduledTaskRepository, 
+            IDueTaskJobQueue dueTaskJobQueue, 
+            IScheduledTaskBuilderFactory scheduledTaskBuilderFactory,
+            ILogger<AggregatorBackgroundService> logger)
         {
             _liveDocsOptions = liveDocsOptions;
             _serviceProvider = serviceProvider;
+            _logger = logger;
 
             foreach (var file in _liveDocsOptions.Value.Files)
             {
-                _resourceDocumentations.Add(file.Name, new ResourceDocumentation
+                var newResourceDocumentation = new ResourceDocumentation
                 {
                     Name = file.Name,
                     RawMarkdown = File.ReadAllText(file.MdPath), // TODO when should this be checked for updates?
-                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText(file.JsonPath), new JsonSerializerOptions { AllowTrailingCommas = true, ReadCommentHandling = JsonCommentHandling.Skip }).Replacements // TODO when should this be checked for updates ?
-                    // add schedule strings to json
-                    // register scheduled tasks for replacements?
-                    // register handlers somewhere up front
-                    // tasks fire on their schedule's
-                    // resulting replacement text goes on a property on this object?
-                });
-            }
-        }
+                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText(file.JsonPath),
+                            new JsonSerializerOptions
+                            {
+                                AllowTrailingCommas = true, 
+                                ReadCommentHandling = JsonCommentHandling.Skip
+                            })
+                        .Replacements // TODO when should the markdown and json be checked for updates ?
+                };
+                _resourceDocumentations.Add(file.Name, newResourceDocumentation);
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
-        {
-            var testDataService = new TransactionTestData();
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(WaitTimeInMs);
-
-                await testDataService.InsertSomeRandomTransactionRows();
-
-                // TODO for each due task? - json should also contain refresh period?
-                // TODO consider using SimpleScheduler?
-                foreach (var resourceDocumentation in _resourceDocumentations.Values)
+                // Register replacements as scheduled tasks
+                foreach (var replacement in newResourceDocumentation.Replacements)
                 {
-                    await ReplaceTokens(resourceDocumentation);
+                    replacement.ParentResourceDocumentationName = newResourceDocumentation.Name;
+                    scheduledTaskRepository.AddScheduledTask(scheduledTaskBuilderFactory.CreateBuilder().FromString(replacement.Schedule, replacement));
                 }
             }
+
+            dueTaskJobQueue.RegisterHandlerForAllTasks(RunDueScheduledTask);
         }
 
-        public string GetLatestMarkdown(string resourceName)
+        private void RunDueScheduledTask(IScheduledTask scheduledTask)
         {
-            return _resourceDocumentations[resourceName].RenderedMarkdown;
-        }
+            var replacement = JsonSerializer.Deserialize<Replacement>(scheduledTask.JobData);
+            if (replacement is null)
+                throw new ApplicationException(
+                    $"Unable to run scheduled task {scheduledTask.Id}, jobData does not contain a serialised instance of a Replacement");
 
-        private async Task ReplaceTokens(ResourceDocumentation resourceDocumentation)
-        {
-            try
-            {
-                var rawMarkdown = resourceDocumentation.RawMarkdown;
+            _logger.LogInformation($"Running scheduled task {scheduledTask.Id} for {replacement.Instruction}.{replacement.Match}");
 
-                foreach (var replacement in resourceDocumentation.Replacements)
-                {
-                    Console.WriteLine(replacement.Match);
-
-                    // TODO only run replacer if value is found in markdown?
-                    //if(!rawMarkdown.Contains($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}"))
-                    //    continue;
-
-                    // TODO use spans instead
-                    var replacementValue = await FetchReplacementValue(replacement);
-                    rawMarkdown = rawMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", replacementValue);
-                }
-
-                resourceDocumentation.RenderedMarkdown = rawMarkdown;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
-
-        private async Task<string> FetchReplacementValue(Replacement replacement)
-        {
             try
             {
                 var replacer = (IReplacer)_serviceProvider.GetServiceByRegisteredTypeName(replacement.Instruction);
-                var renderedValue = await replacer.Render(replacement.Match);
-                return renderedValue;
+                var renderedValue = replacer.Render(replacement.Match).GetAwaiter().GetResult();
+
+                // store the result in the appropriate ResourceDocumentation's replacement
+                _resourceDocumentations[replacement.ParentResourceDocumentationName].Replacements
+                    .FirstOrDefault(r => r.Match == replacement.Match).LatestReplacedData = renderedValue; // ToDO find a nicer way
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                return $"Failed to replace {replacement.Match}!";
+                _logger.LogError(e, $"Error thrown while compiling markdown {e.Message}");
+                _resourceDocumentations[replacement.ParentResourceDocumentationName].Replacements
+                    .FirstOrDefault(r => r.Match == replacement.Match).LatestReplacedData = $"Failed to replace {replacement.Match}!";
             }
+        }
+        
+        // Called by the RequestHandler
+        public string GetLatestMarkdown(string resourceName)
+        {
+            var testDataService = new TransactionTestData();
+            testDataService.InsertSomeRandomTransactionRows().GetAwaiter().GetResult();
+
+            //return _resourceDocumentations[resourceName].RenderedMarkdown;
+            var resourceDocumentation = _resourceDocumentations[resourceName];
+            var renderedMarkdown = resourceDocumentation.RawMarkdown;
+
+            foreach (var replacement in resourceDocumentation.Replacements)
+            {
+                // TODO use spans instead
+                //var replacementValue = await FetchReplacementValue(replacement);
+                renderedMarkdown = renderedMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", replacement.LatestReplacedData);
+            }
+
+            return renderedMarkdown;
         }
     }
 }

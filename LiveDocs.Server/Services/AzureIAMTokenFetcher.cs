@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using LiveDocs.Server.config;
 using LiveDocs.Server.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace LiveDocs.Server.Services
@@ -13,6 +14,7 @@ namespace LiveDocs.Server.Services
     public class AzureIAMTokenFetcher : IAzureIAMTokenFetcher
     {
         private readonly IOptions<StronglyTypedConfig.AzureAd> _azureAdOptions;
+        private readonly ILogger<AzureIAMTokenFetcher> _logger;
         private const string WellKnownAzureAdEndpointUri = "https://login.microsoftonline.com";
         private const string GrantTypeHeaderKeyName = "grant_type";
         private const string GrantTypeHeaderKeyValue = "client_credentials";
@@ -24,9 +26,10 @@ namespace LiveDocs.Server.Services
         public string BearerHeaderValue => $"Bearer {Token.RawData}";
         public JwtSecurityToken Token { get; private set; }
 
-        public AzureIAMTokenFetcher(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions)
+        public AzureIAMTokenFetcher(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, ILogger<AzureIAMTokenFetcher> logger)
         {
             _azureAdOptions = azureAdOptions;
+            _logger = logger;
         }
 
         public async Task Fetch()
@@ -59,7 +62,7 @@ namespace LiveDocs.Server.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError(e, $"Error thrown while fetching token for the service principal with ClientId:{_azureAdOptions.Value.ClientId} {e}");
                 throw;
             }
             
