@@ -1,4 +1,6 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
+﻿@inject HttpClient Http
+
+<div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">LiveDocs</a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
@@ -7,11 +9,20 @@
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
+        @if (files != null)
+        {
+            foreach (var menu in files)
+            {
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
+
+            <NavLink class="nav-link" href="@menu.Name" Match="NavLinkMatch.All">
+
+            <span class="oi oi-home" aria-hidden="true"></span> @menu.Name
+        </NavLink>
         </li>
+
+            }
+        }
     </ul>
 </div>
 
@@ -20,8 +31,32 @@
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    public IEnumerable<GetResourceDocumentationsFile> files;
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var menuList = await Http.GetFromJsonAsync<GetResourceDocumentationsResponse>("api/v1/resources");
+        files = menuList.Files;
+        StateHasChanged();
+        await base.OnInitializedAsync();
+    }
+
+
+    public class GetResourceDocumentationsFile
+    {
+        public string Name { get; set; }
+        public string MdPath { get; set; }
+        public string JsonPath { get; set; }
+    }
+
+    public class GetResourceDocumentationsResponse
+    {
+        public IEnumerable<GetResourceDocumentationsFile> Files { get; init; }
+    }
+
 }
