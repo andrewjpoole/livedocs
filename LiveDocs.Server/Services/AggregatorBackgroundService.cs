@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text.Json;
 using AJP.SimpleScheduler.ScheduledTasks;
 using AJP.SimpleScheduler.ScheduledTaskStorage;
@@ -41,11 +42,13 @@ namespace LiveDocs.Server.Services
 
             foreach (var file in _liveDocsOptions.Value.Files)
             {
+                var markdown = GetFileContents(file.MdPath);
+                var json = GetFileContents(file.JsonPath);
                 var newResourceDocumentation = new ResourceDocumentation
                 {
                     Name = file.Name,
-                    RawMarkdown = File.ReadAllText(file.MdPath), // TODO when should this be checked for updates?
-                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(File.ReadAllText(file.JsonPath),
+                    RawMarkdown = markdown, // TODO when should this be checked for updates?
+                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(json,
                             new JsonSerializerOptions
                             {
                                 AllowTrailingCommas = true, 
@@ -64,6 +67,16 @@ namespace LiveDocs.Server.Services
             }
 
             dueTaskJobQueue.RegisterHandlerForAllTasks(RunDueScheduledTask);
+        }
+
+        private string GetFileContents(string filePath)
+        {
+            if (filePath.StartsWith("http"))
+            {
+                return new WebClient().DownloadString(filePath);
+            }
+
+            return File.ReadAllText(filePath);
         }
 
         private void RunDueScheduledTask(IScheduledTask scheduledTask)
