@@ -19,7 +19,7 @@ paragraph about Bacs day 3 processing etc
 
 ## Std18 File
 
-<<IStd18InfoReplaceer>>
+<<TodaysStd18File>>
 
 ```mermaid
 graph TD
