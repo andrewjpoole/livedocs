@@ -16,13 +16,15 @@ paragraph about Bacs day 3 processing etc
 <<bacsdb.uspGetDay3SettlementOfTodayGroupedByTransactionType>>
 
 ```mermaid
-graph TD
-A[swift infrastructure] -->|<<bacs-swift-inbound-payment-requests>>| B(swift-bacs)
-B -->|<<iso-router-inbound-payment-request>>| C{IsoRouter}
-C -->|<<bacs-process-pending-credit-transaction>>| D[BacsInboundPayments]
-C -->|<<bacs-process-pending-debit-transaction>>| D[BacsInboundPayments]
-D -->|<<bacs-outbound-batched-messages>>| E[Accounts]
-D -->|<<swift-send-message-request-queue>>| F[WebHooks]
+graph TD;    
+    A-->B{{bacs-swift-inbound-payment-requests fa:fa-envelope 234 fa:fa-clock 23654 fa:fa-book-dead 0}};
+    B-->C(rounded square);
+    A---db;
+    d[<<hello>>] 
+    db[(Database)]
+    click B "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/bacs-swift-inbound-payment-requests/overview" _blank
+    style A fill:#aad,stroke:#333,stroke-width:2px
+    style C fill:#aad,stroke:#333,stroke-width:2px
 ```
 
 ```mermaid
