@@ -23,9 +23,7 @@ namespace LiveDocs
                 builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://graph.microsoft.com/User.Read");
             });
-
-            //builder.Services.AddMarkdownComponent();
-
+            
             builder.Services.AddModules(builder =>
             {
                 builder.UseRazorComponentClientModules().AddMarkdownModule();

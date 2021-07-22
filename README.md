@@ -32,12 +32,13 @@ ideally the backend will push changes to any connected frontend clients, who wil
 * [x] replacements should have refresh schedule defined in json, consider using SimpleScheduler? (small/medium)
 * [x] server should provide Api of available resources (small)
 * [x] frontend should list available resources in a menu/treeview? and/or define in route? (small)
-* [ ] resource config discovery, url to devops + walk repos? or lookup from json/yaml file uri? (medium)
+* [ ] lookup ResourceDocumentations from json/yaml file uri and provide API call to refresh? (medium)
+* [ ] resource config discovery, url to devops + walk repos? (large)
 * [ ] server should Push rather than frontend pull, web sockets/signalR etc? (large)
-* [ ] only query if someone is browsing? depend number of active clients (?)
+* [ ] only query if someone is browsing? depend number of active clients, cache might help with this (?)
 * [ ] more replacements API call, Elastic query, App Insights query? (medium)
 * [ ] better styling (?)
 * [ ] split dummy data creation out to seperate web app and improve - queue actual messages* (medium)
 * [ ] Consider storing some data in app insights? where it would be queryable outside of this app, flag in replacement config?
-* [ ] Consider if a cache with item expiry remove the need for a scheduler?
+* [ ] Consider if a cache with item expiry would remove the need for a scheduler? only tasks which should do persistent storage should use the scheduler?
 

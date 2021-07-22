@@ -1,11 +1,16 @@
 using System;
 using System.Data;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using ClearBank.Bacs.Transforms.Files;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -28,7 +33,8 @@ namespace LiveDocs.Server.Replacers
             try
             {
 
-                var std18String = @"VOL1      0                              999999                                1^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                var std18String =
+                    @"VOL1      0                              999999                                1^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 HDR1A999999S   999999      00010001       21005 210130000000                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 HDR2F001200012000                                 00                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 UHL1 2100504040001  000000001 DAILY  001                928     00/09/30        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -10013,29 +10019,163 @@ UTL10000077989141000076790118000040550005918                                    
 *TM*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 *TM*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
 
-                var parsedStd18 = Std18OutputFile.Parse(std18String);
+                // storage account name is cbukcoretestnarwhal3f3d in narwhal
+                // container name is inbound-send-to-swift-bacs
+                // looks like this {"FileLogicalName":"B3DOSLTCLRBGB22XXX2021051420210514133024030.092801_2367697_STD18_PAYMENT.gz","Attachment":"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"}
+                var blobUri =
+                    @"https://cbukcoretestnarwhal3f3d.blob.core.windows.net/inbound-send-to-swift-bacs/004a7909-520e-4100-87b4-037418f71010.json";
+                var blobjson =
+                    @"{""FileLogicalName"":""B3DOSLTCLRBGB22XXX2021051420210514133024030.092801_2367697_STD18_PAYMENT.gz"",""Attachment"":""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""}";
+                var request = JsonSerializer.Deserialize<BacsInboundPaymentFileRequest>(blobjson);
+                var messageBytes = Convert.FromBase64String(request.Attachment);
 
-                var stringBuilder = new StringBuilder();
-                stringBuilder.AppendLine($"| Type | Count | Sum |");
-                stringBuilder.AppendLine("|------ | ------ | ------ |");
-                stringBuilder.AppendLine($"| Direct Credits | {parsedStd18.DirectCredits.Count()} | £{parsedStd18.DirectCredits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
-                stringBuilder.AppendLine($"| UnappliedDirectCredits | {parsedStd18.UnappliedDirectCredits.Count()} | £{parsedStd18.UnappliedDirectCredits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
-                stringBuilder.AppendLine($"| AutomatedSettlementCredits | {parsedStd18.AutomatedSettlementCredits.Count()} | £{parsedStd18.AutomatedSettlementCredits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
-                stringBuilder.AppendLine($"| Direct Debits | {parsedStd18.DirectDebits.Count()} | £{parsedStd18.DirectDebits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
-                stringBuilder.AppendLine($"| UnpaidDirectDebits | {parsedStd18.UnpaidDirectDebits.Count()} | £{parsedStd18.UnpaidDirectDebits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
-                stringBuilder.AppendLine($"| DirectDebitInstructions | {parsedStd18.DirectDebitInstructions.Count()} | n/a |");
-                stringBuilder.AppendLine($"| Recalls | {parsedStd18.Recalls.Count()} | £{parsedStd18.Recalls.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
-                stringBuilder.AppendLine($"| Tellers | {parsedStd18.Tellers .Count()} | £{parsedStd18.Tellers.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
-                stringBuilder.AppendLine($"| ClaimForUnpaidCheques | {parsedStd18.ClaimForUnpaidCheques.Count()} | £{parsedStd18.ClaimForUnpaidCheques.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
-                stringBuilder.AppendLine($"| Contras | {parsedStd18.Contras.Count()} | £{parsedStd18.Contras.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+                // Use swift filename parser here?
+                var gzip = new GzipCompressor();
+                var decompressedBytes = gzip.Decompress(messageBytes);
+                var decompressedString = Encoding.Default.GetString(decompressedBytes);
+
+                var indexOfVOL1 = decompressedString.IndexOf("VOL1");
+                var indexOfLastTapeMark = decompressedString.LastIndexOf("*TM*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^") + 120;
+                var rawStd18 = decompressedString.Substring(indexOfVOL1, indexOfLastTapeMark - indexOfVOL1);
+
+                //rawStd18 = rawStd18.Replace("\r", string.Empty);
+                string normalizedStd18 = Regex.Replace(rawStd18, @"\r\n|\n\r|\n|\r", "\r\n");
+
+                var lines = normalizedStd18.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (lines[i].Length != 120)
+                    {
+                        var lastChar = lines[i].ToCharArray()[120];
+                        //lines[i] = lines[i].Substring(0, 120);
+                    }
+                }
+                //var cleanStd18 = string.Join(string.Empty, lines);
+
                 
-                return stringBuilder.ToString();
+
+                //var parsedStd18 = Std18OutputFile.Parse(std18String);
+                var parsedStd18 = Std18OutputFile.Parse(normalizedStd18);
+
+                var sb = new StringBuilder();
+
+                sb.AppendLine("| Property | Value |");
+                sb.AppendLine("| -------- | ----- |");
+                sb.AppendLine($"| Swift Filename | {request.FileLogicalName} |");
+                sb.AppendLine($"| Blob URI | {blobUri} |");
+                sb.AppendLine($"| Hdr1Label.CreationDate (YYDDD)| {parsedStd18.Hdr1Label.CreationDate} |");
+                sb.AppendLine($"| Hdr1Label.ExpirationDate (YYDDD) | {parsedStd18.Hdr1Label.ExpirationDate} |");
+                sb.AppendLine($"| Hdr1Label.FileSectionNumber | {parsedStd18.Hdr1Label.FileSectionNumber} |");
+                sb.AppendLine($"| Hdr1Label.FileSequenceNumber | {parsedStd18.Hdr1Label.FileSequenceNumber} |");
+                sb.AppendLine($"| Hdr1Label.HDR | {parsedStd18.Hdr1Label.HDR} |");
+                sb.AppendLine($"| Vol1Label.VOL | {parsedStd18.Vol1Label.VOL} |");
+                sb.AppendLine($"| Eof1Label.FileSequenceNumber | {parsedStd18.Eof1Label.FileSequenceNumber} |");
+                sb.AppendLine($"| Eof1Label.FileSectionNumber | {parsedStd18.Eof1Label.FileSectionNumber} |");
+                sb.AppendLine($"| Uhl1Label.ProcessingDate (YYDDD) | {parsedStd18.Uhl1Label.ProcessingDate} |");
+                sb.AppendLine($"| Uhl1Label.UHL | {parsedStd18.Uhl1Label.UHL} |");
+                sb.AppendLine($"| Uhl1Label.WorkCode | {parsedStd18.Uhl1Label.WorkCode} |");
+                sb.AppendLine($"| Utl1Label.CreditItemCount | {parsedStd18.Utl1Label.CreditItemCount} |");
+                sb.AppendLine($"| Utl1Label.CreditValueTotal | {parsedStd18.Utl1Label.CreditValueTotal} |");
+                sb.AppendLine($"| Utl1Label.DDIItemCount | {parsedStd18.Utl1Label.DDIItemCount} |");
+                sb.AppendLine($"| Utl1Label.DebitItemCount | {parsedStd18.Utl1Label.DebitItemCount} |");
+                sb.AppendLine($"| Utl1Label.DebitValueTotal | {parsedStd18.Utl1Label.DebitValueTotal} |");
+                sb.AppendLine($"| Utl1Label.UTL | {parsedStd18.Utl1Label.UTL} |");
+
+                sb.AppendLine();
+
+                sb.AppendLine($"| Type | Count | Sum |");
+                sb.AppendLine("|------ | ------ | ------ |");
+                sb.AppendLine($"| Direct Credits | {parsedStd18.DirectCredits.Count()} | £{parsedStd18.DirectCredits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+                sb.AppendLine($"| UnappliedDirectCredits | {parsedStd18.UnappliedDirectCredits.Count()} | £{parsedStd18.UnappliedDirectCredits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+                sb.AppendLine($"| AutomatedSettlementCredits | {parsedStd18.AutomatedSettlementCredits.Count()} | £{parsedStd18.AutomatedSettlementCredits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+                sb.AppendLine($"| Direct Debits | {parsedStd18.DirectDebits.Count()} | £{parsedStd18.DirectDebits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+                sb.AppendLine($"| UnpaidDirectDebits | {parsedStd18.UnpaidDirectDebits.Count()} | £{parsedStd18.UnpaidDirectDebits.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+                sb.AppendLine($"| DirectDebitInstructions | {parsedStd18.DirectDebitInstructions.Count()} | n/a |");
+                sb.AppendLine($"| Recalls | {parsedStd18.Recalls.Count()} | £{parsedStd18.Recalls.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+                sb.AppendLine($"| Tellers | {parsedStd18.Tellers.Count()} | £{parsedStd18.Tellers.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+                sb.AppendLine($"| ClaimForUnpaidCheques | {parsedStd18.ClaimForUnpaidCheques.Count()} | £{parsedStd18.ClaimForUnpaidCheques.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+                sb.AppendLine($"| Contras | {parsedStd18.Contras.Count()} | £{parsedStd18.Contras.Sum(x => int.Parse(x.AmountInPence)) / 100} |");
+
+                return sb.ToString();
 
             }
             catch (Exception e)
             {
                 _logger.LogError(e, $"Error thrown while rendering std18");
                 throw;
+            }
+        }
+
+        private string StripNonPrintingChars(string inputString)
+        {
+            string cleanString = Encoding.ASCII.GetString(
+                Encoding.Convert(
+                    Encoding.UTF8,
+                    Encoding.GetEncoding(
+                        Encoding.ASCII.EncodingName,
+                        new EncoderReplacementFallback(string.Empty),
+                        new DecoderExceptionFallback()
+                    ),
+                    Encoding.UTF8.GetBytes(inputString)
+                )
+            );
+            return cleanString;
+        }
+    }
+
+    public class BacsInboundPaymentFileRequest
+    {
+        /// <summary>
+        /// The filename specified in the DataPdu
+        /// </summary>
+        public string FileLogicalName { get; set; }
+
+        /// <summary>
+        /// Attachment stored as a base64 string.
+        /// </summary>
+        public string Attachment { get; set; }
+    }
+
+    public class GzipCompressor 
+    {
+        /// <summary>
+        /// The default buffer size (64Kb).
+        /// </summary>
+        internal const int DefaultBufferSize = 64 * 1024;
+
+        /// <summary>
+        /// Compresses the given bytes.
+        /// </summary>
+        public byte[] Compress(byte[] bytes)
+        {
+
+            using (var compressIntoMs = new MemoryStream())
+            {
+                using (var gzs = new BufferedStream(new GZipStream(compressIntoMs, CompressionMode.Compress), DefaultBufferSize))
+                {
+                    gzs.Write(bytes, 0, bytes.Length);
+                }
+
+                return compressIntoMs.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Decompresses bytes which were initially compressed by this utility.
+        /// </summary>
+        public byte[] Decompress(byte[] bytes)
+        {
+            using (var compressedMs = new MemoryStream(bytes))
+            {
+                using (var decompressedMs = new MemoryStream())
+                {
+                    using (var stream = new BufferedStream(new GZipStream(compressedMs, CompressionMode.Decompress), DefaultBufferSize))
+                    {
+                        stream.CopyTo(decompressedMs);
+                    }
+
+                    return decompressedMs.ToArray();
+                }
             }
         }
     }
