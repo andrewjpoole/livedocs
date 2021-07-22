@@ -251,22 +251,6 @@ It converts "HTML", but keep intact partial entries like "xxxHTMLyyy" and so on.
 
 ![youtu.be](https://youtu.be/mswPy5bt3TQ)
 
-![bilibili](https://www.bilibili.com/video/BV1Q54y1i7Lg)
-
-![netease music](https://music.163.com/#/song?id=849211)
-
-![netease music](https://music.163.com/#/album?id=84590)
-
-![netease music](https://music.163.com/#/playlist?id=3143362600)
-
-### LaTeX
-
-When $a \ne 0$, there are two solutions to $ax^2 + bx + c = 0$ and they are
-
-$$
-x = {-b \pm \sqrt{b^2-4ac} \over 2a}.
-$$
-
 ### Diagram
 
 ```mermaid
