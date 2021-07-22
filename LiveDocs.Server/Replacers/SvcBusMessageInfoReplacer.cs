@@ -30,7 +30,7 @@ namespace LiveDocs.Server.Replacers
             var requestUri = $"subscriptions/{_subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.ServiceBus/namespaces/{serviceBusNamespace}/queues/{queueName}?api-version=2017-04-01";
             var stats = await _azureRmApiClient.Query<ServiceBusGetQueueResponse>(requestUri);
 
-            return $"{queueName}  AM fa:fa-envelope-open:{stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.activeMessageCount} SM fa:fa-clock:{stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.scheduledMessageCount} DL fa:fa-book-dead:{stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.deadLetterMessageCount}";
+            return $"fa:fa-envelope-open:{stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.activeMessageCount} fa:fa-clock:{stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.scheduledMessageCount} fa:fa-book-dead:{stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.deadLetterMessageCount} - {queueName}";
         }
     }
 }

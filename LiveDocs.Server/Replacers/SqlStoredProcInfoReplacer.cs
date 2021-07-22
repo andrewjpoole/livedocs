@@ -45,7 +45,7 @@ namespace LiveDocs.Server.Replacers
                 var columns = await reader.GetColumnSchemaAsync();
                 foreach (var dbColumn in columns)
                 {
-                    sbColumnNames.Append($" {dbColumn.ColumnName}&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;|");
+                    sbColumnNames.Append($" {dbColumn.ColumnName} |");
                     sbColumnAlignment.Append(" --- |");
                 }
 
