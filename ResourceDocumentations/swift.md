@@ -35,20 +35,6 @@ ___
 
 ***
 
-
-## Typographic replacements
-
-Enable typographer option to see result.
-
-(c) (C) (r) (R) (tm) (TM) (p) (P) +-
-
-test.. test... test..... test?..... test!....
-
-!!!!!! ???? ,,  -- ---
-
-"Smartypants, double quotes" and 'single quotes'
-
-
 ## Emphasis
 
 **This is bold text**
@@ -126,6 +112,15 @@ var foo = function (bar) {
 console.log(foo(5));
 ```
 
+```csharp
+public async Task<string> FetchMarkdown()
+{
+    var response = await Http.GetFromJsonAsync<GetLiveDocsResponse>("api/v1/livedocs/" + Page);
+    _lastRendered = DateTime.Now;
+    return response.Markdown;
+}
+```
+
 ## Tables
 
 | Option | Description |
@@ -164,92 +159,6 @@ Like links, Images also have a footnote style syntax
 With a reference later in the document defining the URL location:
 
 [id]: https://octodex.github.com/images/dojocat.jpg  "The Dojocat"
-
-## Plugins
-
-### Emojies
-
-> Classic markup: :wink: :cry: :laughing: :yum:
->
-> Shortcuts (emoticons): :-) :-( 8-) ;)
-
-
-
-### Subscript/Superscript
-
-- 19^th^
-- H~2~O
-
-
-### \<ins>
-
-++Inserted text++
-
-
-### \<mark>
-
-==Marked text==
-
-
-### Footnotes
-
-Footnote 1 link[^first].
-
-Footnote 2 link[^second].
-
-Inline footnote^[Text of inline footnote] definition.
-
-Duplicated footnote reference[^second].
-
-[^first]: Footnote **can have markup**
-
-    and multiple paragraphs.
-
-[^second]: Footnote text.
-
-
-### Definition lists
-
-Term 1
-
-:   Definition 1
-with lazy continuation.
-
-Term 2 with *inline markup*
-
-:   Definition 2
-
-        { some code, part of Definition 2 }
-
-    Third paragraph of definition 2.
-
-_Compact style:_
-
-Term 1
-  ~ Definition 1
-
-Term 2
-  ~ Definition 2a
-  ~ Definition 2b
-
-
-### Abbreviations
-
-This is HTML abbreviation example.
-
-It converts "HTML", but keep intact partial entries like "xxxHTMLyyy" and so on.
-
-*[HTML]: Hyper Text Markup Language
-
-### Custom containers
-
-::: warning
-*here be dragons*
-:::
-
-### Media
-
-![youtu.be](https://youtu.be/mswPy5bt3TQ)
 
 ### Diagram
 
