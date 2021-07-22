@@ -4,6 +4,7 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Modulight.Modules.Hosting;
 using StardustDL.RazorComponents.Markdown;
 
 namespace LiveDocs
@@ -23,9 +24,14 @@ namespace LiveDocs
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://graph.microsoft.com/User.Read");
             });
 
-            builder.Services.AddMarkdownComponent();
+            //builder.Services.AddMarkdownComponent();
 
-            await builder.Build().RunAsync();
+            builder.Services.AddModules(builder =>
+            {
+                builder.UseRazorComponentClientModules().AddMarkdownModule();
+            });
+
+            await builder.Build().RunAsyncWithModules();
         }
     }
 }
