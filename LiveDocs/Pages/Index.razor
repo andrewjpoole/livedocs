@@ -6,14 +6,18 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 
-<p>LiveDocs index page</p>
+<p>LiveDocs index page, last rendered @_lastRendered</p>
 
-<StardustDL.RazorComponents.Markdown.MarkdownRenderer Value="@MarkdownText" />
+<StardustDL.RazorComponents.Markdown.MarkdownRenderer 
+    Value="@MarkdownText" 
+    Class="markdown-body"
+    />
 
 @code {
     public string MarkdownText = "#### waiting for markdown and data to be rendered...";
     private Timer _timer;
     private IJSObjectReference _scrollInterface;
+    private DateTime _lastRendered = DateTime.Now;
 
     [Parameter]
     public string Page { get; set; }
@@ -34,6 +38,7 @@
     public async Task<string> FetchMarkdown()
     {
         var response = await Http.GetFromJsonAsync<GetLiveDocsResponse>("api/v1/livedocs/" + Page);
+        _lastRendered = DateTime.Now;
         return response.Markdown;
     }
 
