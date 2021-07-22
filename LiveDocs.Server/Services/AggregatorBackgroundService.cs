@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
+using AJP.SimpleScheduler.Intervals;
 using AJP.SimpleScheduler.ScheduledTasks;
 using AJP.SimpleScheduler.ScheduledTaskStorage;
 using AJP.SimpleScheduler.TaskExecution;
@@ -22,6 +23,8 @@ namespace LiveDocs.Server.Services
     {
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IScheduledTaskRepository _scheduledTaskRepository;
+        private readonly IScheduledTaskBuilderFactory _scheduledTaskBuilderFactory;
         private readonly ILogger<AggregatorBackgroundService> _logger;
         private const int WaitTimeInMs = 5000;
         private const string ReplacementPrefix = "<<";
@@ -38,8 +41,37 @@ namespace LiveDocs.Server.Services
         {
             _liveDocsOptions = liveDocsOptions;
             _serviceProvider = serviceProvider;
+            _scheduledTaskRepository = scheduledTaskRepository;
+            _scheduledTaskBuilderFactory = scheduledTaskBuilderFactory;
             _logger = logger;
 
+            dueTaskJobQueue.RegisterHandlerWhen(RunDueScheduledTask, task => task.JobDataTypeName == "Object");
+            //dueTaskJobQueue.RegisterHandlerWhen(HandleReloadResourceDocumentations, task => task.JobDataTypeName == nameof(String));
+
+            LoadResourceDocumentations();
+
+            //_scheduledTaskRepository.AddScheduledTask(_scheduledTaskBuilderFactory.CreateBuilder().EveryStartingAt(Lapse.Minutes(5), DateTime.UtcNow).WithJobData("ReloadResourceDocumentations"));
+        }
+
+        private void HandleReloadResourceDocumentations(IScheduledTask obj)
+        {
+            _logger.LogInformation("Clearing scheduled tasks and Resource Documentation files...");
+            // clear scheduled tasks
+            foreach (var scheduledTask in _scheduledTaskRepository.AllTasks())
+            {
+                _scheduledTaskRepository.RemoveScheduledTask(scheduledTask.Id);
+            }
+
+            _scheduledTaskRepository.AddScheduledTask(_scheduledTaskBuilderFactory.CreateBuilder().EveryStartingAt(Lapse.Seconds(30), DateTime.UtcNow).WithJobData("ReloadResourceDocumentations"));
+
+            _resourceDocumentations = new Dictionary<string, ResourceDocumentation>();
+
+            
+        }
+
+        private void LoadResourceDocumentations()
+        {
+            _logger.LogInformation("Loading Resource Documentation files...");
             foreach (var file in _liveDocsOptions.Value.Files)
             {
                 var markdown = GetFileContents(file.MdPath);
@@ -47,11 +79,11 @@ namespace LiveDocs.Server.Services
                 var newResourceDocumentation = new ResourceDocumentation
                 {
                     Name = file.Name,
-                    RawMarkdown = markdown, // TODO when should this be checked for updates?
+                    RawMarkdown = markdown,
                     Replacements = JsonSerializer.Deserialize<ReplacementConfig>(json,
                             new JsonSerializerOptions
                             {
-                                AllowTrailingCommas = true, 
+                                AllowTrailingCommas = true,
                                 ReadCommentHandling = JsonCommentHandling.Skip
                             })
                         .Replacements // TODO when should the markdown and json be checked for updates ?
@@ -62,11 +94,9 @@ namespace LiveDocs.Server.Services
                 foreach (var replacement in newResourceDocumentation.Replacements)
                 {
                     replacement.ParentResourceDocumentationName = newResourceDocumentation.Name;
-                    scheduledTaskRepository.AddScheduledTask(scheduledTaskBuilderFactory.CreateBuilder().FromString(replacement.Schedule, replacement));
+                    _scheduledTaskRepository.AddScheduledTask(_scheduledTaskBuilderFactory.CreateBuilder().FromString(replacement.Schedule, replacement));
                 }
             }
-
-            dueTaskJobQueue.RegisterHandlerForAllTasks(RunDueScheduledTask);
         }
 
         private string GetFileContents(string filePath)
