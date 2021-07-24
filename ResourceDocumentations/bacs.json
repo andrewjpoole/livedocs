@@ -25,31 +25,31 @@
       "OnlyRunWhenClientsConnected": true
     },
     {
-      "Match": "inbound-bacs-pain-009",
+      "Match": "inbound-bacs-pain009",
       "Instruction": "ISvcBusMessageInfoReplacer",
       "Schedule": "every|10ss",
       "OnlyRunWhenClientsConnected": true
     },
     {
-      "Match": "inbound-bacs-pain-011",
+      "Match": "inbound-bacs-pain011",
       "Instruction": "ISvcBusMessageInfoReplacer",
       "Schedule": "every|10ss",
       "OnlyRunWhenClientsConnected": true
     },
     {
-      "Match": "inbound-bacs-pacs-008",
+      "Match": "inbound-bacs-pacs008",
       "Instruction": "ISvcBusMessageInfoReplacer",
       "Schedule": "every|10ss",
       "OnlyRunWhenClientsConnected": true
     },
     {
-      "Match": "inbound-bacs-pacs-003",
+      "Match": "inbound-bacs-pacs003",
       "Instruction": "ISvcBusMessageInfoReplacer",
       "Schedule": "every|10ss",
       "OnlyRunWhenClientsConnected": true
     },
     {
-      "Match": "inbound-bacs-pacs-004",
+      "Match": "inbound-bacs-pacs004",
       "Instruction": "ISvcBusMessageInfoReplacer",
       "Schedule": "every|10ss",
       "OnlyRunWhenClientsConnected": true
