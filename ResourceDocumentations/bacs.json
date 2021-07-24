@@ -11,6 +11,84 @@
       "Instruction": "ISvcBusMessageInfoReplacer",
       "Schedule": "every|10ss",
       "OnlyRunWhenClientsConnected": true
+    },   
+    {
+      "Match": "bacs-outbound-batched-messages",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "swift-send-message-request-queue",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "inbound-bacs-pain009",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "inbound-bacs-pain011",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "inbound-bacs-pacs008",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "inbound-bacs-pacs003",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "inbound-bacs-pacs004",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+	{
+      "Match": "bacs-split-direct-credit",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "bacs-split-credit-contra",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "bacs-split-direct-debit",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "bacs-split-debit-contra",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "inbound-bacs-new-mandate",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
+    },
+    {
+      "Match": "inbound-bacs-mandate-migration",
+      "Instruction": "ISvcBusMessageInfoReplacer",
+      "Schedule": "every|10ss",
+      "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-process-pending-credit-transaction",
@@ -25,13 +103,13 @@
       "OnlyRunWhenClientsConnected": true
     },
     {
-      "Match": "bacs-outbound-batched-messages",
+      "Match": "bacs-process-pending-credit-transaction-contra",
       "Instruction": "ISvcBusMessageInfoReplacer",
       "Schedule": "every|10ss",
       "OnlyRunWhenClientsConnected": true
     },
     {
-      "Match": "swift-send-message-request-queue",
+      "Match": "bacs-process-pending-debit-transaction-contra",
       "Instruction": "ISvcBusMessageInfoReplacer",
       "Schedule": "every|10ss",
       "OnlyRunWhenClientsConnected": true
@@ -53,12 +131,6 @@
       "Instruction": "IStd18InfoReplacer",
       "Schedule": "every|120ss",
       "OnlyRunWhenClientsConnected": true
-    },
-    //{
-    //  "Match": "std18FileInfo",
-    //  "Instruction": "IStd18FileInfoReplacer",
-    //  "Schedule": "everyStartingAt|1d|02:00:00",
-    //  "OnlyRunWhenClientsConnected": false
-    //}
+    }
   ] 
 }

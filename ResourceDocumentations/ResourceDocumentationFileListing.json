@@ -1,0 +1,14 @@
+{
+  "Files": [
+      {
+        "Name": "Bacs",
+        "MdPath": "https://raw.githubusercontent.com/andrewjpoole/livedocs/main/ResourceDocumentations/bacs.md",
+        "JsonPath": "https://raw.githubusercontent.com/andrewjpoole/livedocs/main/ResourceDocumentations/bacs.json"
+      },
+      {
+        "Name": "Swift",
+        "MdPath": "https://raw.githubusercontent.com/andrewjpoole/livedocs/main/ResourceDocumentations/swift.md",
+        "JsonPath": "https://raw.githubusercontent.com/andrewjpoole/livedocs/main/ResourceDocumentations/swift.json"
+      }
+    ]
+}
