@@ -22,7 +22,7 @@ paragraph about Bacs day 3 processing etc
 <<TodaysStd18File>>
 
 ```mermaid
-flowchart TD;
+flowchart LR;
     %% define nodes
     s[Bacs Scheme STS service]    
     si(swift infrastructure)
