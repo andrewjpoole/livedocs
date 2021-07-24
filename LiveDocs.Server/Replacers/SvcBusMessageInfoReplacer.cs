@@ -34,7 +34,9 @@ namespace LiveDocs.Server.Replacers
             var scheduledMessageCount = stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.scheduledMessageCount;
             var deadLetterMessageCount = stats.ServiceBusQueueProperties.ServiceBusQueueCountDetails.deadLetterMessageCount;
 
-            return $"fa:fa-envelope-open:{activeMessageCount} fa:fa-clock:{scheduledMessageCount} fa:fa-book-dead:{deadLetterMessageCount} - {queueName}";
+            var dlIcon = deadLetterMessageCount == 0 ? "far:fa-trash-alt" : "fas:fa-trash-alt";
+
+            return @$"""far:fa-envelope-open {activeMessageCount} | far:fa-clock {scheduledMessageCount} | {dlIcon} {deadLetterMessageCount} - {queueName}""";
         }
     }
 }
