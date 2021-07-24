@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
@@ -9,10 +8,12 @@ using AJP.SimpleScheduler.ScheduledTasks;
 using AJP.SimpleScheduler.ScheduledTaskStorage;
 using AJP.SimpleScheduler.TaskExecution;
 using LiveDocs.Server.config;
+using LiveDocs.Server.Models;
 using LiveDocs.Server.Replacements;
 using LiveDocs.Server.Replacers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using File = System.IO.File;
 
 namespace LiveDocs.Server.Services
 {
@@ -72,7 +73,12 @@ namespace LiveDocs.Server.Services
         private void LoadResourceDocumentations()
         {
             _logger.LogInformation("Loading Resource Documentation files...");
-            foreach (var file in _liveDocsOptions.Value.Files)
+            var resourceDocumentationFilesJson = GetFileContents(_liveDocsOptions.Value.ResourceDocumentationFileListing);
+            var resourceDocFiles = JsonSerializer.Deserialize<ResourceDocumentationFileListing>(resourceDocumentationFilesJson);
+
+            // ToDo check if content has changed before updating?
+
+            foreach (var file in resourceDocFiles.Files)
             {
                 var markdown = GetFileContents(file.MdPath);
                 var json = GetFileContents(file.JsonPath);
@@ -86,7 +92,7 @@ namespace LiveDocs.Server.Services
                                 AllowTrailingCommas = true,
                                 ReadCommentHandling = JsonCommentHandling.Skip
                             })
-                        .Replacements // TODO when should the markdown and json be checked for updates ?
+                        .Replacements
                 };
                 _resourceDocumentations.Add(file.Name, newResourceDocumentation);
 
@@ -148,6 +154,12 @@ namespace LiveDocs.Server.Services
             }
 
             return renderedMarkdown;
+        }
+
+        public void ReloadResourceDocumentationFiles()
+        {
+            _logger.LogInformation("ReloadResourceDocumentationFiles requested via api call.");
+            LoadResourceDocumentations();
         }
     }
 }
