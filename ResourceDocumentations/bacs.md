@@ -17,12 +17,12 @@ paragraph about Bacs day 3 processing etc
 
 <<bacsdb.uspGetDay3SettlementOfTodayGroupedByTransactionStatus>>
 
-## Std18 File
+## Todays Std18 Files
 
 <<TodaysStd18File>>
 
 ```mermaid
-flowchart TD;  
+flowchart;  
     %% define nodes
     s[Bacs Scheme STS service]    
     si(swift infrastructure)
