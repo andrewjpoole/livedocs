@@ -21,6 +21,8 @@ paragraph about Bacs day 3 processing etc
 
 <<TodaysStd18File>>
 
+## Bacs Inbound Payments Architecture
+    
 ```mermaid
 flowchart TD;
     %% define nodes
@@ -38,7 +40,7 @@ flowchart TD;
     bdb[(bacs database)]
     %% define queues with clickable links
     q1{{<<bacs-swift-inbound-payment-requests>>}}
-    click q1 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/bacs-swift-inbound-payment-requests/overview" _blank;
+    click q1 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/bacs-swift-inbound-payment-requests/overview" "tooltip Hello" _blank;
     q2{{<<iso-router-inbound-payment-request>>}} 
     click q2 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/iso-router-inbound-payment-request/overview" _blank;   
     %%q3{{<<bacs-outbound-batched-messages>>}}
@@ -77,7 +79,7 @@ flowchart TD;
     q33{{<<bacs-process-pending-debit-transaction-contra>>}}
     click q33 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/bacs-process-pending-debit-transaction-contra/overview" _blank;
     %% define links with queue nodes
-    s<-->|Soap connector|si
+    s<-->|Soap|si
     si-->q1; q1-->sb
     %%sb-->q4; q4-->si
     sb-->q2; q2-->ir
@@ -104,18 +106,14 @@ flowchart TD;
     ss-->wh
     %%bpi3-->q3; q3-->sb;
     
-    %% define styles (#ffd=external to CB, #cad=other CB teams, #aad=narwhal)
-    style s fill:#ffd,stroke:#333,stroke-width:2px
-    style wh fill:#cad,stroke:#333,stroke-width:2px
-    style si fill:#cad,stroke:#333,stroke-width:2px
-    style ss fill:#cad,stroke:#333,stroke-width:2px
-    style ir fill:#aad,stroke:#333,stroke-width:2px
-    style sb fill:#aad,stroke:#333,stroke-width:2px
-    style bpi2 fill:#aad,stroke:#333,stroke-width:2px
-    style bpi2s fill:#aad,stroke:#333,stroke-width:2px
-    style bpi3 fill:#aad,stroke:#333,stroke-width:2px
-    style bm fill:#aad,stroke:#333,stroke-width:2px
-    style a fill:#cad,stroke:#333,stroke-width:2px
+    %% define styles
+    classDef externalService fill:#ffd,stroke:#333,stroke-width:2px
+    classDef otherTeamService fill:#cad,stroke:#333,stroke-width:2px
+    classDef narwhalService fill:#aad,stroke:#333,stroke-width:2px
+
+    class s externalService
+    class wh,si,ss,a otherTeamService
+    class ir,sb,bpi2s,bpi2,bpi3,bm narwhalService
 ```
 
 ```mermaid
