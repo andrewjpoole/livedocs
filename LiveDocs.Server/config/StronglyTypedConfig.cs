@@ -23,20 +23,13 @@ namespace LiveDocs.Server.config
             public string NamespaceName { get; set; }
         }
 
-        public class File
-        {
-            public string Name { get; set; }
-            public string MdPath { get; set; }
-            public string JsonPath { get; set; }
-        }
-
         public class LiveDocs
         {
             public const string ConfigKey = "LiveDocs";
             public string AzureResourceManagementApiBaseUri { get; set; }
             public string SubscriptionId { get; set; }
             public ServiceBus ServiceBus { get; set; }
-            public List<File> Files { get; set; }
+            public string ResourceDocumentationFileListing { get; set; }
         }
     }
 }
