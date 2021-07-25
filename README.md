@@ -32,7 +32,7 @@ ideally the backend will push changes to any connected frontend clients, who wil
 * [x] replacements should have refresh schedule defined in json, consider using SimpleScheduler? (small/medium)
 * [x] server should provide Api of available resources (small)
 * [x] frontend should list available resources in a menu/treeview? and/or define in route? (small)
-* [ ] lookup ResourceDocumentations from json/yaml file uri and provide API call to refresh? (medium)
+* [x] lookup ResourceDocumentations from json/yaml file uri and provide API call to refresh? (medium)
 * [ ] resource config discovery, url to devops + walk repos? (large)
 * [ ] server should Push rather than frontend pull, web sockets/signalR etc? (large)
 * [ ] only query if someone is browsing? depend number of active clients, cache might help with this (?)
