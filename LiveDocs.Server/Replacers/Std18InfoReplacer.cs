@@ -43,7 +43,7 @@ namespace LiveDocs.Server.Replacers
                 var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
 
                 var dateToSearchFor = new DateTimeOffset(new DateTime(2021, 7, 22));
-                //var dateToSearchFor = DateTimeOffset.Now.Date
+                //var dateToSearchFor = DateTimeOffset.Now.Date // ToDo put this back
 
                 await foreach (var blobItem in containerClient.GetBlobsAsync())
                 {

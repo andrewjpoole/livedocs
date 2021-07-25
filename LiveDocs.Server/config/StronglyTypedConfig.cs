@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace LiveDocs.Server.config
+﻿namespace LiveDocs.Server.config
 {
     public class StronglyTypedConfig
     {
