@@ -28,7 +28,8 @@ flowchart TD;
     %% define nodes
     s[Bacs Scheme STS service]    
     si(swift infrastructure)
-    sb(swift bacs)
+    sb("swift bacs <br /> TeamNarwhal")
+    click sb "https://cbinfrastructure.visualstudio.com/cbi/_git/swift_bacs" _blank;
     ir(iso router)
     bpi2s(bacs payments inbound Day 2 Splitter)
     bpi2(bacs payments inbound Day 2 Processor)
@@ -38,24 +39,25 @@ flowchart TD;
     ss(settlement service)
     wh(webhooks)
     bdb[(bacs database)]
+    
     %% define queues with clickable links
     q1{{<<bacs-swift-inbound-payment-requests>>}}
-    click q1 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/bacs-swift-inbound-payment-requests/overview" "tooltip Hello" _blank;
+    click q1 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/bacs-swift-inbound-payment-requests/overview" _blank;
     q2{{<<iso-router-inbound-payment-request>>}} 
     click q2 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/iso-router-inbound-payment-request/overview" _blank;   
     %%q3{{<<bacs-outbound-batched-messages>>}}
     %%click q3 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/bacs-outbound-batched-messages/overview" _blank;
     %%q4{{<<swift-send-message-request-queue>>}}
     %%click q4 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/swift-send-message-request-queue" _blank;
-    q10{{<<inbound-bacs-pain009>> AUDIS setup}}
+    q10{{<<inbound-bacs-pain009>> <br />AUDIS setup}}
     click q10 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/inbound-bacs-pain009" _blank;
-    q11{{<<inbound-bacs-pain011>> AUDIS cancel}}
+    q11{{<<inbound-bacs-pain011>> <br />AUDIS cancel}}
     click q11 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/inbound-bacs-pain011" _blank;
-    q12{{<<inbound-bacs-pacs008>> credit}}
+    q12{{<<inbound-bacs-pacs008>> <br />credit}}
     click q12 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/inbound-bacs-pacs008" _blank;
-    q13{{<<inbound-bacs-pacs003>> debit}}
+    q13{{<<inbound-bacs-pacs003>> <br />debit}}
     click q13 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/inbound-bacs-pacs003" _blank;
-    q14{{<<inbound-bacs-pacs004>> return}}
+    q14{{<<inbound-bacs-pacs004>> <br />return}}
     click q14 "https://portal.azure.com/#@cbinfrastructure.com/resource/subscriptions/0df249d7-9fde-4cd0-a580-9bf84a4406a4/resourceGroups/cbuk-core-testnarwhal-servicebus-uksouth/providers/Microsoft.ServiceBus/namespaces/cbuk-core-testnarwhal-servicebus-uksouth/queues/inbound-bacs-pacs004" _blank;
     
     q20{{<<bacs-split-direct-credit>>}}
