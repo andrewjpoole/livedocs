@@ -29,7 +29,7 @@ flowchart TD;
     s[Bacs Scheme STS service]    
     si(swift infrastructure)
     sb("swift bacs <br /> TeamNarwhal")
-    click sb https://cbinfrastructure.visualstudio.com/cbi/_git/swift_bacs _blank;
+    click sb "https://cbinfrastructure.visualstudio.com/cbi/_git/swift_bacs" _blank;
     ir(iso router)
     bpi2s(bacs payments inbound Day 2 Splitter)
     bpi2(bacs payments inbound Day 2 Processor)
