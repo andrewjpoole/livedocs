@@ -1,13 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using AJP.MediatrEndpoints;
 using AJP.MediatrEndpoints.EndpointRegistration;
-using AJP.SimpleScheduler;
 using LiveDocs.Server.config;
 using LiveDocs.Server.Replacers;
 using LiveDocs.Server.RequestHandlers;
@@ -34,12 +30,11 @@ namespace LiveDocs.Server
 
             services.AddSingleton<IAzureIAMTokenFetcher, AzureIAMTokenFetcher>();
             services.AddSingleton<IAzureRMApiClient, AzureRMApiClient>();
+            services.AddSingleton<IReplacementCache, InMemoryReplacementCache>();
             services.AddSingleton<ISvcBusMessageInfoReplacer, SvcBusMessageInfoReplacer>();
             services.AddSingleton<ISqlStoredProcInfoReplacer, SqlStoredProcInfoReplacer>();
             services.AddSingleton<IStd18InfoReplacer, Std18InfoReplacer>();
-
-            services.AddSimpleScheduler(true);
-
+            
             services.AddControllersWithViews();
             services.AddRazorPages();
 
@@ -55,7 +50,7 @@ namespace LiveDocs.Server
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            
             app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();

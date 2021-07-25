@@ -36,7 +36,7 @@ namespace LiveDocs.Server.Replacers
 
             var dlIcon = deadLetterMessageCount == 0 ? "far:fa-trash-alt" : "fas:fa-trash-alt";
 
-            return @$"""far:fa-envelope-open {activeMessageCount} | far:fa-clock {scheduledMessageCount} | {dlIcon} {deadLetterMessageCount} - {queueName}""";
+            return @$"""{queueName} <br /> far:fa-envelope-open {activeMessageCount} | far:fa-clock {scheduledMessageCount} | {dlIcon} {deadLetterMessageCount}""";
         }
     }
 }
