@@ -39,7 +39,7 @@
     {
       "Match": "inbound-bacs-pacs008",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "every|10ss",
+      "TimeToLive": "10s",
       "OnlyRunWhenClientsConnected": true
     },
     {
