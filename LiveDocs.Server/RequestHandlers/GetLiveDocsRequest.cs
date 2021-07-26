@@ -31,7 +31,7 @@ namespace LiveDocs.Server.RequestHandlers
         {
             var response = new GetLiveDocsResponse
             {
-                Markdown = _aggregatorBackgroundService.GetLatestMarkdown(request.ResourceName)
+                Markdown = await _aggregatorBackgroundService.GetLatestMarkdown(request.ResourceName)
             };
             return response;
         }

@@ -29,7 +29,7 @@ namespace LiveDocs.Server.Replacers
 
                 var connectionString = _configuration.GetConnectionString(dbName);
 
-                using var conn = new SqlConnection(connectionString);
+                await using var conn = new SqlConnection(connectionString);
                 conn.Open();
 
                 var command = new SqlCommand(sprocName, conn);
