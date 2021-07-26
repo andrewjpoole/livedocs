@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LiveDocs.Server.Services
 {
-    public class InMemoryReplacementCache : BackgroundService, IReplacementCache
+    public class InMemoryReplacementCache : IReplacementCache
     {
         private readonly ILogger<InMemoryReplacementCache> _logger;
         private readonly IServiceProvider _serviceProvider;
@@ -47,7 +47,7 @@ namespace LiveDocs.Server.Services
             });
         }
 
-        public string FetchCurrentReplacementValue(string name, string instruction, bool waitForNewValueIfExpired)
+        public async Task<string> FetchCurrentReplacementValue(string name, string instruction, bool waitForNewValueIfExpired)
         {
             var key = $"{instruction}:{name}";
 
@@ -56,7 +56,7 @@ namespace LiveDocs.Server.Services
                 if (waitForNewValueIfExpired)
                 {
                     _logger.LogDebug($"waiting for expired replacement to be re-fetched {name}");
-                    RunReplacement(_replacements[key]);
+                    await RunReplacement(_replacements[key]);
                 }
                 else
                 {
@@ -75,13 +75,13 @@ namespace LiveDocs.Server.Services
             _replacements = new();
         }
 
-        private void RunReplacement(Replacement replacement)
+        private async Task RunReplacement(Replacement replacement)
         {
             try
             {
                 _logger.LogInformation($"Running {replacement.Match} using {replacement.Instruction} with TTL {replacement.TimeToLive}");
                 var replacer = (IReplacer)_serviceProvider.GetServiceByRegisteredTypeName(replacement.Instruction);
-                var renderedValue = replacer.Render(replacement.Match).GetAwaiter().GetResult();
+                var renderedValue = await replacer.Render(replacement.Match);
                 replacement.LatestReplacedData = renderedValue;
             }
             catch (Exception e)
@@ -102,13 +102,13 @@ namespace LiveDocs.Server.Services
             return DateTime.MinValue;
         }
 
-        protected override Task ExecuteAsync(CancellationToken cancellationToken)
-        {
-            // consume the queue of expired replacements and re-fetch data
-            while (!cancellationToken.IsCancellationRequested)
-            {
+        //protected override Task ExecuteAsync(CancellationToken cancellationToken)
+        //{
+        //    // consume the queue of expired replacements and re-fetch data
+        //    while (!cancellationToken.IsCancellationRequested)
+        //    {
 
-            }
-        }
+        //    }
+        //}
     }
 }

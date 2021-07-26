@@ -5,6 +5,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using LiveDocs.Server.config;
 using LiveDocs.Server.Models;
 using LiveDocs.Server.Replacements;
@@ -100,19 +101,23 @@ namespace LiveDocs.Server.Services
         }
 
         // Called by the RequestHandler
-        public string GetLatestMarkdown(string resourceName)
+        public async Task<string> GetLatestMarkdown(string resourceName)
         {
             _logger.LogDebug("GetLatestMarkdown requested via api call.");
             var resourceDocumentation = _resourceDocumentations[resourceName];
-            var renderedMarkdown = resourceDocumentation.RawMarkdown;
+            //var renderedMarkdown = resourceDocumentation.RawMarkdown;
+
+            var markdownBuilder = new StringBuilder(resourceDocumentation.RawMarkdown);
 
             foreach (var replacement in resourceDocumentation.Replacements)
             {
-                var latestReplacedValue = _replacementCache.FetchCurrentReplacementValue(replacement.Match, replacement.Instruction, true);
-                renderedMarkdown = renderedMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", latestReplacedValue);
+                var latestReplacedValue = await _replacementCache.FetchCurrentReplacementValue(replacement.Match, replacement.Instruction, true);
+                //renderedMarkdown = renderedMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", latestReplacedValue);
+                markdownBuilder.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", latestReplacedValue);
             }
 
-            return renderedMarkdown;
+            //return renderedMarkdown;
+            return markdownBuilder.ToString();
         }
 
         // Called by the RequestHandler
