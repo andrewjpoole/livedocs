@@ -51,7 +51,7 @@ namespace LiveDocs.Server.Replacers
                     {
                         if (blobItem.Properties.CreatedOn.Value.Date != dateToSearchFor.Date) continue;
 
-                        var blobJson = DownloadBlob(blobItem.Name, containerClient);
+                        var blobJson = await DownloadBlob(blobItem.Name, containerClient);
 
                         var (std18, swiftFileName) = GetStd18FromJsonContainingGzippedMessage(blobJson);
 
@@ -86,11 +86,11 @@ namespace LiveDocs.Server.Replacers
             }
         }
 
-        private string DownloadBlob(string blobName, BlobContainerClient containerClient)
+        private async Task<string> DownloadBlob(string blobName, BlobContainerClient containerClient)
         {
             var blobClient2 = containerClient.GetBlobClient(blobName);
-            using var memoryStream = new MemoryStream();
-            blobClient2.DownloadTo(memoryStream);
+            await using var memoryStream = new MemoryStream();
+            await blobClient2.DownloadToAsync(memoryStream);
             var blobJson = Encoding.UTF8.GetString(memoryStream.ToArray());
             blobJson = RemoveUtf8ByteOrderMark(blobJson);
             return blobJson;
