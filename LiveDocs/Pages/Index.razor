@@ -42,7 +42,7 @@
             // set scrollstate to same as before updating markdown
             await _scrollInterface.InvokeVoidAsync("setScroll", scrollState.X, scrollState.Y);
             
-        }, new AutoResetEvent(false), 5500, 15000);
+        }, new AutoResetEvent(false), 5500, 5000);
     }
 
     public async Task<string> FetchMarkdown()

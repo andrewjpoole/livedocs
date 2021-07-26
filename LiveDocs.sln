@@ -8,10 +8,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7ABF14D3-5ABF-4CA7-A4F0-5A1555F3B8FE}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		ResourceDocumentations\article.md = ResourceDocumentations\article.md
-		ResourceDocumentations\article2.json = ResourceDocumentations\article2.json
-		ResourceDocumentations\article2.md = ResourceDocumentations\article2.md
+		ResourceDocumentations\bacs.json = ResourceDocumentations\bacs.json
+		ResourceDocumentations\bacs.md = ResourceDocumentations\bacs.md
 		README.md = README.md
+		ResourceDocumentations\ResourceDocumentationFileListing.json = ResourceDocumentations\ResourceDocumentationFileListing.json
+		ResourceDocumentations\swift.json = ResourceDocumentations\swift.json
+		ResourceDocumentations\swift.md = ResourceDocumentations\swift.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiveDocs.Server", "LiveDocs.Server\LiveDocs.Server.csproj", "{12E36862-5B55-4F15-B833-ED6952210A4F}"
