@@ -20,18 +20,18 @@ namespace LiveDocs.Server.RequestHandlers
 
     public class GetLiveDocsRequestHandler : IRequestHandler<GetLiveDocsRequest, GetLiveDocsResponse>
     {
-        private readonly IAggregatorBackgroundService _aggregatorBackgroundService;
+        private readonly IMarkdownReplacementAggregator _markdownReplacementAggregator;
 
-        public GetLiveDocsRequestHandler(IAggregatorBackgroundService aggregatorBackgroundService)
+        public GetLiveDocsRequestHandler(IMarkdownReplacementAggregator markdownReplacementAggregator)
         {
-            _aggregatorBackgroundService = aggregatorBackgroundService;
+            _markdownReplacementAggregator = markdownReplacementAggregator;
         }
 
         public async Task<GetLiveDocsResponse> Handle(GetLiveDocsRequest request, CancellationToken cancellationToken)
         {
             var response = new GetLiveDocsResponse
             {
-                Markdown = await _aggregatorBackgroundService.GetLatestMarkdown(request.ResourceName)
+                Markdown = await _markdownReplacementAggregator.GetLatestMarkdown(request.ResourceName)
             };
             return response;
         }
