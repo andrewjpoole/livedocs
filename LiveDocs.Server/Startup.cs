@@ -30,7 +30,11 @@ namespace LiveDocs.Server
 
             services.AddSingleton<IAzureIAMTokenFetcher, AzureIAMTokenFetcher>();
             services.AddSingleton<IAzureRMApiClient, AzureRMApiClient>();
+
+            services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundTaskQueue(50));
             services.AddSingleton<IReplacementCache, InMemoryReplacementCache>();
+            services.AddHostedService(sp => (InMemoryReplacementCache)sp.GetService<IReplacementCache>());
+            
             services.AddSingleton<ISvcBusMessageInfoReplacer, SvcBusMessageInfoReplacer>();
             services.AddSingleton<ISqlStoredProcInfoReplacer, SqlStoredProcInfoReplacer>();
             services.AddSingleton<IStd18InfoReplacer, Std18InfoReplacer>();
@@ -41,7 +45,6 @@ namespace LiveDocs.Server
             services.AddMediatrEndpoints(typeof(Startup));
 
             services.AddSingleton<IAggregatorBackgroundService, AggregatorBackgroundService>();
-            //services.AddHostedService(sp => (AggregatorBackgroundService)sp.GetService<IAggregatorBackgroundService>());
         }
         
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
