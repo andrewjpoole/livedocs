@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -18,6 +19,8 @@ namespace LiveDocs.Server.Replacers
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<Std18InfoReplacer> _logger;
+        private BlobServiceClient _blobServiceClient;
+        private BlobContainerClient _containerClient;
 
         public Std18InfoReplacer(IConfiguration configuration, ILogger<Std18InfoReplacer> logger)
         {
@@ -37,21 +40,19 @@ namespace LiveDocs.Server.Replacers
             {
 
                 var connectionString = _configuration.GetConnectionString("mainAzureStorageAccount");
-                var blobServiceClient = new BlobServiceClient(connectionString);
+                _blobServiceClient = new BlobServiceClient(connectionString);
 
                 const string containerName = "inbound-send-to-swift-bacs";
-                var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                _containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
 
-                var dateToSearchFor = new DateTimeOffset(new DateTime(2021, 7, 22));
-                //var dateToSearchFor = DateTimeOffset.Now.Date // ToDo put this back
-
-                await foreach (var blobItem in containerClient.GetBlobsAsync())
+                // ToDo pre-fetch blob names from somewhere else, app insights, sql, elastic?
+                var blobItemNames = new List<string> {"0051404b-a895-456b-9607-60019afa3052.json"};
+                
+                foreach (var blobItemName in blobItemNames)
                 {
                     try
                     {
-                        if (blobItem.Properties.CreatedOn.Value.Date != dateToSearchFor.Date) continue;
-
-                        var blobJson = await DownloadBlob(blobItem.Name, containerClient);
+                        var blobJson = await DownloadBlob(blobItemName, _containerClient);
 
                         var (std18, swiftFileName) = GetStd18FromJsonContainingGzippedMessage(blobJson);
 
@@ -60,16 +61,14 @@ namespace LiveDocs.Server.Replacers
 
                         var parsedStd18 = Std18OutputFile.Parse(std18);
 
-                        var markdown = BuildMarkdownTable(swiftFileName, blobItem.Name, parsedStd18);
+                        var markdown = BuildMarkdownTable(swiftFileName, blobItemName, parsedStd18);
 
                         stringBuilder.AppendLine(markdown);
                         stringBuilder.AppendLine();
-
-                        break; // TODO figure out how to handle the millions of std18 files in narwhal
                     }
                     catch (Exception e)
                     {
-                        var message = $"Error thrown while rendering std18 file from blob {blobItem.Name}";
+                        var message = $"Error thrown while rendering std18 file from blob {blobItemName}";
                         _logger.LogError(e, message);
                         stringBuilder.AppendLine(message);
                         stringBuilder.AppendLine();
@@ -171,9 +170,9 @@ namespace LiveDocs.Server.Replacers
 
         private DateTime ConvertJulianDate(string julianDate)
         {
-            int year = Convert.ToInt32(julianDate.Substring(0,2));
-            int day = Convert.ToInt32(julianDate.Substring(2));
-            DateTime dateTime = new DateTime(1999 + year, 12, 18, new JulianCalendar());
+            var year = Convert.ToInt32(julianDate.Substring(0,2));
+            var day = Convert.ToInt32(julianDate.Substring(2));
+            var dateTime = new DateTime(1999 + year, 12, 18, new JulianCalendar());
 
             dateTime = dateTime.AddDays(day);
 

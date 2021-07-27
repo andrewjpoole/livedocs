@@ -22,6 +22,7 @@ namespace LiveDocs.Server.Services
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
         private readonly ILogger<AggregatorBackgroundService> _logger;
         private readonly IReplacementCache _replacementCache;
+        private StringBuilder _markdownBuilder;
         private const string ReplacementPrefix = "<<";
         private const string ReplacementSuffix = ">>";
         private Dictionary<string, ResourceDocumentation> _resourceDocumentations = new();
@@ -31,6 +32,7 @@ namespace LiveDocs.Server.Services
             AllowTrailingCommas = true,
             ReadCommentHandling = JsonCommentHandling.Skip
         };
+
 
         public AggregatorBackgroundService(
             IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, 
@@ -104,20 +106,16 @@ namespace LiveDocs.Server.Services
         public async Task<string> GetLatestMarkdown(string resourceName)
         {
             _logger.LogDebug("GetLatestMarkdown requested via api call.");
-            var resourceDocumentation = _resourceDocumentations[resourceName];
-            //var renderedMarkdown = resourceDocumentation.RawMarkdown;
 
-            var markdownBuilder = new StringBuilder(resourceDocumentation.RawMarkdown);
+            _markdownBuilder = new StringBuilder(_resourceDocumentations[resourceName].RawMarkdown);
 
-            foreach (var replacement in resourceDocumentation.Replacements)
+            foreach (var replacement in _resourceDocumentations[resourceName].Replacements)
             {
-                var latestReplacedValue = await _replacementCache.FetchCurrentReplacementValue(replacement.Match, replacement.Instruction, true);
-                //renderedMarkdown = renderedMarkdown.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", latestReplacedValue);
-                markdownBuilder.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", latestReplacedValue);
+                _markdownBuilder.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", 
+                    await _replacementCache.FetchCurrentReplacementValue(replacement.Match, replacement.Instruction, false));
             }
-
-            //return renderedMarkdown;
-            return markdownBuilder.ToString();
+            
+            return _markdownBuilder.ToString();
         }
 
         // Called by the RequestHandler
