@@ -50,32 +50,26 @@ namespace LiveDocs.Server.Services
             });
         }
 
-        public async Task<string> FetchCurrentReplacementValue(string name, string instruction, bool waitForNewValueIfExpired)
+        public async Task<(string Name, string Data)> FetchCurrentReplacementValue(string name, string instruction, bool waitForNewValueIfExpired)
         {
             var key = $"{instruction}:{name}";
 
-            if (_replacements.ContainsKey(key))
+            if (!_replacements.ContainsKey(key)) return (name, $"replacement with key {key} not found");
+
+            if (!_replacements[key].HasExpired()) return (name, _replacements[key].LatestReplacedData);
+
+            if (waitForNewValueIfExpired)
             {
-                if (_replacements[key].HasExpired())
-                {
-                    if (waitForNewValueIfExpired)
-                    {
-                        _logger.LogDebug($"waiting for expired replacement to be re-fetched {name}");
-                        await RunReplacement(_replacements[key]);
-                        return _replacements[key].LatestReplacedData;
-                    }
-
-                    _logger.LogDebug($"replacement named {name} has expired and will be re-fetched in the background");
-                    await _backgroundTaskQueue.QueueBackgroundWorkItemAsync(
-                        async token => await RunReplacement(_replacements[key]));
-
-                    return _replacements[key].LatestReplacedData;
-                }
-
-                return _replacements[key].LatestReplacedData;
+                //_logger.LogDebug($"waiting for expired replacement to be re-fetched {name}");
+                await RunReplacement(_replacements[key]);
+                return (name, _replacements[key].LatestReplacedData);
             }
 
-            return $"replacement with key {key} not found";
+            _logger.LogDebug($"expired replacement {name} will be re-fetched in the background");
+            await _backgroundTaskQueue.QueueBackgroundWorkItemAsync(
+                async token => await RunReplacement(_replacements[key]));
+
+            return (name, _replacements[key].LatestReplacedData);
         }
 
         public void ClearCache()
