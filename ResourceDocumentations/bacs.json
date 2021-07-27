@@ -129,7 +129,7 @@
     {
       "Match": "TodaysStd18File",
       "Instruction": "IStd18InfoReplacer",
-      "TimeToLive": "10m",
+      "TimeToLive": "1m",
       "OnlyRunWhenClientsConnected": true
     }
   ] 
