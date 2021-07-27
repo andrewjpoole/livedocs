@@ -11,5 +11,7 @@ namespace LiveDocs.Server.Replacements
         public string LatestReplacedData { get; set; } = "waiting for data...";
         public string ParentResourceDocumentationName { get; set; }
         public DateTime Expired { get; set; }
+
+        public bool HasExpired() => DateTime.UtcNow > Expired;
     }
 }
