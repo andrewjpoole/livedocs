@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,12 +16,12 @@ using Microsoft.Extensions.Options;
 namespace LiveDocs.Server.Services
 {
     /// <summary>
-    /// Service which fetches markdown + configJson for a resource and serves markdown 
+    /// Service which fetches resource documentation files, registers replacements with the cache and serves the replaced markdown 
     /// </summary>
-    public class AggregatorBackgroundService : IAggregatorBackgroundService
+    public class MarkdownReplacementAggregator : IMarkdownReplacementAggregator
     {
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
-        private readonly ILogger<AggregatorBackgroundService> _logger;
+        private readonly ILogger<MarkdownReplacementAggregator> _logger;
         private readonly IReplacementCache _replacementCache;
         private StringBuilder _markdownBuilder;
         private const string ReplacementPrefix = "<<";
@@ -34,9 +35,9 @@ namespace LiveDocs.Server.Services
         };
 
 
-        public AggregatorBackgroundService(
+        public MarkdownReplacementAggregator(
             IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, 
-            ILogger<AggregatorBackgroundService> logger, 
+            ILogger<MarkdownReplacementAggregator> logger, 
             IReplacementCache replacementCache)
         {
             _liveDocsOptions = liveDocsOptions;
@@ -81,6 +82,9 @@ namespace LiveDocs.Server.Services
                 {
                     _replacementCache.RegisterReplacement(replacement.Match, replacement.Instruction, replacement.TimeToLive, true);
                 }
+
+                // request the markdown to initialise the replacements...
+                _ = GetLatestMarkdown(file.Name);
             }
         }
         
@@ -108,13 +112,18 @@ namespace LiveDocs.Server.Services
             _logger.LogDebug("GetLatestMarkdown requested via api call.");
 
             _markdownBuilder = new StringBuilder(_resourceDocumentations[resourceName].RawMarkdown);
-
-            foreach (var replacement in _resourceDocumentations[resourceName].Replacements)
-            {
-                _markdownBuilder.Replace($"{ReplacementPrefix}{replacement.Match}{ReplacementSuffix}", 
-                    await _replacementCache.FetchCurrentReplacementValue(replacement.Match, replacement.Instruction, false));
-            }
             
+            // kick of all replacement tasks in parallel and then wait for them all to complete
+            var tasks = _resourceDocumentations[resourceName].Replacements.Select(
+                async r => await _replacementCache.FetchCurrentReplacementValue(r.Match, r.Instruction, true));
+
+            var results = await Task.WhenAll(tasks);
+
+            foreach (var replacedValue in results.ToList())
+            {
+                _markdownBuilder.Replace($"{ReplacementPrefix}{replacedValue.Name}{ReplacementSuffix}", replacedValue.Data);
+            }
+
             return _markdownBuilder.ToString();
         }
 
