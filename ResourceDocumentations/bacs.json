@@ -3,115 +3,115 @@
     {
       "Match": "bacs-swift-inbound-payment-requests",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "iso-router-inbound-payment-request",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },   
     {
       "Match": "bacs-outbound-batched-messages",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "swift-send-message-request-queue",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "inbound-bacs-pain009",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "inbound-bacs-pain011",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "inbound-bacs-pacs008",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "inbound-bacs-pacs003",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "inbound-bacs-pacs004",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
 	{
       "Match": "bacs-split-direct-credit",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-split-credit-contra",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-split-direct-debit",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-split-debit-contra",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "inbound-bacs-new-mandate",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "inbound-bacs-mandate-migration",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-process-pending-credit-transaction",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-process-pending-debit-transaction",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-process-pending-credit-transaction-contra",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
       "Match": "bacs-process-pending-debit-transaction-contra",
       "Instruction": "ISvcBusMessageInfoReplacer",
-      "TimeToLive": "20s",
+      "TimeToLive": "30s",
       "OnlyRunWhenClientsConnected": true
     },
     {
@@ -129,7 +129,7 @@
     {
       "Match": "TodaysStd18File",
       "Instruction": "IStd18InfoReplacer",
-      "TimeToLive": "2m",
+      "TimeToLive": "10m",
       "OnlyRunWhenClientsConnected": true
     }
   ] 
