@@ -45,19 +45,13 @@ namespace LiveDocs.Server.Replacers
                 const string containerName = "inbound-send-to-swift-bacs";
                 _containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
 
-                var dateToSearchFor = new DateTimeOffset(new DateTime(2021, 7, 22));
-                //var dateToSearchFor = DateTimeOffset.Now.Date // ToDo put this back
-
-                // pre-fetch blob names from somewhere else
+                // ToDo pre-fetch blob names from somewhere else, app insights, sql, elastic?
                 var blobItemNames = new List<string> {"0051404b-a895-456b-9607-60019afa3052.json"};
                 
-                //await foreach (var blobItem in _containerClient.GetBlobsAsync())
                 foreach (var blobItemName in blobItemNames)
                 {
                     try
                     {
-                        //if (blobItem.Properties.CreatedOn.Value.Date != dateToSearchFor.Date) continue;
-
                         var blobJson = await DownloadBlob(blobItemName, _containerClient);
 
                         var (std18, swiftFileName) = GetStd18FromJsonContainingGzippedMessage(blobJson);
@@ -71,8 +65,6 @@ namespace LiveDocs.Server.Replacers
 
                         stringBuilder.AppendLine(markdown);
                         stringBuilder.AppendLine();
-
-                        break; // TODO figure out how to handle the millions of std18 files in narwhal
                     }
                     catch (Exception e)
                     {
@@ -178,9 +170,9 @@ namespace LiveDocs.Server.Replacers
 
         private DateTime ConvertJulianDate(string julianDate)
         {
-            int year = Convert.ToInt32(julianDate.Substring(0,2));
-            int day = Convert.ToInt32(julianDate.Substring(2));
-            DateTime dateTime = new DateTime(1999 + year, 12, 18, new JulianCalendar());
+            var year = Convert.ToInt32(julianDate.Substring(0,2));
+            var day = Convert.ToInt32(julianDate.Substring(2));
+            var dateTime = new DateTime(1999 + year, 12, 18, new JulianCalendar());
 
             dateTime = dateTime.AddDays(day);
 
