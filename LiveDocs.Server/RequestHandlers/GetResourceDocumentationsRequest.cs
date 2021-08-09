@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +8,6 @@ using LiveDocs.Server.Models;
 using LiveDocs.Server.Services;
 using MediatR;
 using Microsoft.Extensions.Options;
-using File = System.IO.File;
 
 namespace LiveDocs.Server.RequestHandlers
 {
@@ -35,16 +32,17 @@ namespace LiveDocs.Server.RequestHandlers
     public class GetResourceDocumentationsRequestHandler : IRequestHandler<GetResourceDocumentationsRequest, GetResourceDocumentationsResponse>
     {
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
+        private readonly IFileContentDownloader _fileContentDownloader;
 
-        public GetResourceDocumentationsRequestHandler(IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions)
+        public GetResourceDocumentationsRequestHandler(IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, IFileContentDownloader fileContentDownloader)
         {
             _liveDocsOptions = liveDocsOptions;
+            _fileContentDownloader = fileContentDownloader;
         }
 
         public async Task<GetResourceDocumentationsResponse> Handle(GetResourceDocumentationsRequest request, CancellationToken cancellationToken)
         {
-            var webClient = new WebClient();
-            var resourceDocumentationFilesJson = webClient.DownloadString(new Uri(_liveDocsOptions.Value.ResourceDocumentationFileListing));
+            var resourceDocumentationFilesJson = await _fileContentDownloader.Fetch(_liveDocsOptions.Value.ResourceDocumentationFileListing);
             var resourceDocFiles = JsonSerializer.Deserialize<ResourceDocumentationFileListing>(resourceDocumentationFilesJson);
             var response = new GetResourceDocumentationsResponse
             {

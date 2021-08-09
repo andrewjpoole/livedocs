@@ -36,7 +36,7 @@ namespace LiveDocs.Server.Services
         {
             try
             {
-                using var httpClient = new HttpClient();
+                using var httpClient = new HttpClient(); // TODO use a clientfactory
                 var uriString = WellKnownAzureAdEndpointUri;
                 httpClient.BaseAddress = new Uri(uriString);
 
