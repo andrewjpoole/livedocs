@@ -22,6 +22,7 @@ namespace LiveDocs.Server.Services
     {
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
         private readonly ILogger<MarkdownReplacementAggregator> _logger;
+        private readonly IFileContentDownloader _fileContentDownloader;
         private readonly IReplacementCache _replacementCache;
         private StringBuilder _markdownBuilder;
         private const string ReplacementPrefix = "<<";
@@ -38,19 +39,21 @@ namespace LiveDocs.Server.Services
         public MarkdownReplacementAggregator(
             IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, 
             ILogger<MarkdownReplacementAggregator> logger, 
+            IFileContentDownloader fileContentDownloader,
             IReplacementCache replacementCache)
         {
             _liveDocsOptions = liveDocsOptions;
             _logger = logger;
+            _fileContentDownloader = fileContentDownloader;
             _replacementCache = replacementCache;
             
             LoadResourceDocumentations();
         }
         
-        private void LoadResourceDocumentations()
+        private async Task LoadResourceDocumentations()
         {
             _logger.LogInformation("Loading Resource Documentation files...");
-            var resourceDocumentationFilesJson = GetFileContents(_liveDocsOptions.Value.ResourceDocumentationFileListing);
+            var resourceDocumentationFilesJson = await GetFileContents(_liveDocsOptions.Value.ResourceDocumentationFileListing);
 
 
             var resourceDocumentationFilesJsonHash = HashString(resourceDocumentationFilesJson);
@@ -67,8 +70,8 @@ namespace LiveDocs.Server.Services
             
             foreach (var file in resourceDocFiles.Files)
             {
-                var markdown = GetFileContents(file.MdPath);
-                var json = GetFileContents(file.JsonPath);
+                var markdown = await GetFileContents(file.MdPath);
+                var json = await GetFileContents(file.JsonPath);
                 var newResourceDocumentation = new ResourceDocumentation
                 {
                     Name = file.Name,
@@ -96,14 +99,15 @@ namespace LiveDocs.Server.Services
             return hashAsString;
         }
 
-        private string GetFileContents(string filePath)
+        private async Task<string> GetFileContents(string filePath)
         {
             if (filePath.StartsWith("http"))
             {
-                return new WebClient().DownloadString(filePath);
+                //return new WebClient().DownloadString(filePath);
+                return await _fileContentDownloader.Fetch(filePath);
             }
 
-            return File.ReadAllText(filePath);
+            return await File.ReadAllTextAsync(filePath);
         }
 
         // Called by the RequestHandler

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -49,6 +51,20 @@ namespace LiveDocs.Server
             services.AddMediatrEndpoints(typeof(Startup));
 
             services.AddSingleton<IMarkdownReplacementAggregator, MarkdownReplacementAggregator>();
+
+            services.AddHttpClient("AzureDevOpsClient", c =>
+            {
+                var PAT = Configuration["LiveDocs:azureDevOpsPat"];
+                var authToken = Encoding.ASCII.GetBytes($"anything:{PAT}");
+                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
+                    Convert.ToBase64String(authToken));
+            });
+
+            services.AddHttpClient("PublicUrlClient", c =>
+            {
+            });
+
+            services.AddSingleton<IFileContentDownloader, FileContentDownloader>();
         }
         
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

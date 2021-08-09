@@ -20,6 +20,7 @@
         public class LiveDocs
         {
             public const string ConfigKey = "LiveDocs";
+            public string AzureDevOpsPat { get; set; }
             public string AzureResourceManagementApiBaseUri { get; set; }
             public string SubscriptionId { get; set; }
             public ServiceBus ServiceBus { get; set; }
