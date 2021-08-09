@@ -30,7 +30,11 @@ namespace LiveDocs.Server
 
             services.AddSingleton<IAzureIAMTokenFetcher, AzureIAMTokenFetcher>();
             services.AddSingleton<IAzureRMApiClient, AzureRMApiClient>();
+
+            services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundTaskQueue(100));
             services.AddSingleton<IReplacementCache, InMemoryReplacementCache>();
+            services.AddHostedService(sp => (InMemoryReplacementCache)sp.GetService<IReplacementCache>());
+            
             services.AddSingleton<ISvcBusMessageInfoReplacer, SvcBusMessageInfoReplacer>();
             services.AddSingleton<ISqlStoredProcInfoReplacer, SqlStoredProcInfoReplacer>();
             services.AddSingleton<IStd18InfoReplacer, Std18InfoReplacer>();
