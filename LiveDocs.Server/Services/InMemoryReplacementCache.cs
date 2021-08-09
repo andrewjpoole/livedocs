@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Kusto.Data.Common;
 using LiveDocs.Server.Replacements;
@@ -10,16 +11,18 @@ using Microsoft.Extensions.Logging;
 
 namespace LiveDocs.Server.Services
 {
-    public class InMemoryReplacementCache : IReplacementCache
+    public class InMemoryReplacementCache : BackgroundService, IReplacementCache
     {
         private readonly ILogger<InMemoryReplacementCache> _logger;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
         private Dictionary<string, Replacement> _replacements = new();
 
-        public InMemoryReplacementCache(ILogger<InMemoryReplacementCache> logger, IServiceProvider serviceProvider)
+        public InMemoryReplacementCache(ILogger<InMemoryReplacementCache> logger, IServiceProvider serviceProvider, IBackgroundTaskQueue backgroundTaskQueue)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
+            _backgroundTaskQueue = backgroundTaskQueue;
         }
 
         public void RegisterReplacement(string name, string instruction, string timeToLive, bool replaceIfKeyExists)
@@ -62,6 +65,8 @@ namespace LiveDocs.Server.Services
                 {
                     _logger.LogDebug($"replacement named {name} has expired and will be re-fetched in the background");
                     // ToDo add job to queue to trigger RunReplacement?
+                    await _backgroundTaskQueue.QueueBackgroundWorkItemAsync(
+                        async token => await RunReplacement(_replacements[key]));
                 }
 
                 return _replacements[key].LatestReplacedData;
@@ -102,13 +107,76 @@ namespace LiveDocs.Server.Services
             return DateTime.MinValue;
         }
 
-        //protected override Task ExecuteAsync(CancellationToken cancellationToken)
-        //{
-        //    // consume the queue of expired replacements and re-fetch data
-        //    while (!cancellationToken.IsCancellationRequested)
-        //    {
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation($"Queued Hosted Service is running.");
 
-        //    }
-        //}
+            await BackgroundProcessing(cancellationToken);
+        }
+        
+        private async Task BackgroundProcessing(CancellationToken cancellationToken)
+        {
+            // consume the queue of expired replacements and re-fetch data
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var workItem = await _backgroundTaskQueue.DequeueAsync(cancellationToken);
+
+                try
+                {
+                    await workItem(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "Error occurred executing {WorkItem}.", nameof(workItem));
+                }
+            }
+        }
+    }
+
+    public interface IBackgroundTaskQueue
+    {
+        ValueTask QueueBackgroundWorkItemAsync(Func<CancellationToken, ValueTask> workItem);
+
+        ValueTask<Func<CancellationToken, ValueTask>> DequeueAsync(
+            CancellationToken cancellationToken);
+    }
+
+    public class BackgroundTaskQueue : IBackgroundTaskQueue
+    {
+        private readonly Channel<Func<CancellationToken, ValueTask>> _queue;
+
+        public BackgroundTaskQueue(int capacity)
+        {
+            // Capacity should be set based on the expected application load and
+            // number of concurrent threads accessing the queue.            
+            // BoundedChannelFullMode.Wait will cause calls to WriteAsync() to return a task,
+            // which completes only when space became available. This leads to backpressure,
+            // in case too many publishers/calls start accumulating.
+            var options = new BoundedChannelOptions(capacity)
+            {
+                FullMode = BoundedChannelFullMode.Wait
+            };
+            _queue = Channel.CreateBounded<Func<CancellationToken, ValueTask>>(options);
+        }
+
+        public async ValueTask QueueBackgroundWorkItemAsync(
+            Func<CancellationToken, ValueTask> workItem)
+        {
+            if (workItem == null)
+            {
+                throw new ArgumentNullException(nameof(workItem));
+            }
+
+            await _queue.Writer.WriteAsync(workItem);
+        }
+
+        public async ValueTask<Func<CancellationToken, ValueTask>> DequeueAsync(
+            CancellationToken cancellationToken)
+        {
+            var workItem = await _queue.Reader.ReadAsync(cancellationToken);
+
+            return workItem;
+        }
     }
 }
