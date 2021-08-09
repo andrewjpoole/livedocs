@@ -42,6 +42,7 @@ namespace LiveDocs.Server.RequestHandlers
 
         public async Task<GetResourceDocumentationsResponse> Handle(GetResourceDocumentationsRequest request, CancellationToken cancellationToken)
         {
+            var resourceDocumentationFilesJson = await _fileContentDownloader.Fetch(_liveDocsOptions.Value.ResourceDocumentationFileListing);
             var resourceDocFiles = JsonSerializer.Deserialize<ResourceDocumentationFileListing>(resourceDocumentationFilesJson);
             var response = new GetResourceDocumentationsResponse
             {
