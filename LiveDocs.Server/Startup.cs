@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,13 +14,12 @@ using LiveDocs.Server.Replacers;
 using LiveDocs.Server.RequestHandlers;
 using LiveDocs.Server.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace LiveDocs.Server
 {
     public class Startup
     {
-        private const string AllowSpecificOriginsPolicyName = "allowSpecificOrigins";
-
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -31,7 +35,7 @@ namespace LiveDocs.Server
             services.AddSingleton<IAzureIAMTokenFetcher, AzureIAMTokenFetcher>();
             services.AddSingleton<IAzureRMApiClient, AzureRMApiClient>();
 
-            services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundTaskQueue(100));
+            services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundTaskQueue(50));
             services.AddSingleton<IReplacementCache, InMemoryReplacementCache>();
             services.AddHostedService(sp => (InMemoryReplacementCache)sp.GetService<IReplacementCache>());
             
@@ -44,8 +48,7 @@ namespace LiveDocs.Server
 
             services.AddMediatrEndpoints(typeof(Startup));
 
-            services.AddSingleton<IAggregatorBackgroundService, AggregatorBackgroundService>();
-            //services.AddHostedService(sp => (AggregatorBackgroundService)sp.GetService<IAggregatorBackgroundService>());
+            services.AddSingleton<IMarkdownReplacementAggregator, MarkdownReplacementAggregator>();
         }
         
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -54,7 +57,10 @@ namespace LiveDocs.Server
             {
                 app.UseDeveloperExceptionPage();
             }
-            
+
+            // wake up the aggregator
+            app.ApplicationServices.GetService<IMarkdownReplacementAggregator>();
+
             app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
