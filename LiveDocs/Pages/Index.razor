@@ -3,17 +3,18 @@
 @attribute [Authorize]
 @using System.Threading
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
 @inject HttpClient Http
 @inject IJSRuntime Js
 
 <p>LiveDocs @Page Resource Documentation, last rendered @_lastRendered</p>
 
-<StardustDL.RazorComponents.Markdown.MarkdownRenderer 
-    Value="@MarkdownText" 
-    Class="markdown-body"
-    />
+<StardustDL.RazorComponents.Markdown.MarkdownRenderer Value="@MarkdownText"
+                                                      Class="markdown-body" />
 
 @code {
+    private HubConnection hubConnection;
     public string MarkdownText = "#### waiting for markdown and data to be rendered...";
     private Timer _timer;
     private IJSObjectReference _scrollInterface;
@@ -26,10 +27,13 @@
     {
         await base.OnInitializedAsync();
 
-        _timer = new Timer(async (object stateInfo) =>
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/latestmarkdownhub"))
+            .Build();
+
+        hubConnection.On<string>("SendLatestMarkdownToInterestedClients", async (newMarkdown) =>
         {
-            // fetch new markdown, takes a while if replacements have expired
-            var newMarkdown = await FetchMarkdown();
+            Console.WriteLine("New markdown received");
 
             // remember scroll state before updating markdown
             var scrollState = await _scrollInterface.InvokeAsync<System.Drawing.Point>("getScroll");
@@ -37,26 +41,19 @@
 
             // update markdown
             MarkdownText = newMarkdown;
+            _lastRendered = DateTime.Now;
             StateHasChanged();
-            
+
             // set scrollstate to same as before updating markdown
             await _scrollInterface.InvokeVoidAsync("setScroll", scrollState.X, scrollState.Y);
-            
-        }, new AutoResetEvent(false), 5500, 5000);
-    }
+        });
 
-    public async Task<string> FetchMarkdown()
-    {
-        var response = await Http.GetFromJsonAsync<GetLiveDocsResponse>("api/v1/livedocs/" + Page);
-        _lastRendered = DateTime.Now;
-        return response.Markdown;
-    }
+        await hubConnection.StartAsync();
 
-    public class GetLiveDocsResponse
-    {
-        public string Markdown { get; init; }
+        await hubConnection.SendAsync("SelectResource", Page);
+        
     }
-
+   
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
