@@ -65,9 +65,16 @@ namespace LiveDocs.Server.Services
                 return (name, _replacements[key].LatestReplacedData);
             }
 
-            _logger.LogDebug($"expired replacement {name} will be re-fetched in the background");
+            // check if we have already scheduled the replacement
+            if(_replacements[key].IsScheduled)
+                return (name, _replacements[key].LatestReplacedData);
+
+            // schedule a new replacement
+            //_logger.LogDebug($"expired replacement {name} will be re-fetched in the background");
             await _backgroundTaskQueue.QueueBackgroundWorkItemAsync(
                 async token => await RunReplacement(_replacements[key]));
+
+            _replacements[key].IsScheduled = true;
 
             return (name, _replacements[key].LatestReplacedData);
         }
@@ -81,10 +88,11 @@ namespace LiveDocs.Server.Services
         {
             try
             {
-                _logger.LogInformation($"Running {replacement.Match} using {replacement.Instruction} with TTL {replacement.TimeToLive}");
+                //_logger.LogInformation($"Running {replacement.Match} using {replacement.Instruction} with TTL {replacement.TimeToLive}");
                 var replacer = (IReplacer)_serviceProvider.GetServiceByRegisteredTypeName(replacement.Instruction);
                 var renderedValue = await replacer.Render(replacement.Match);
                 replacement.LatestReplacedData = renderedValue;
+                replacement.IsScheduled = false;
             }
             catch (Exception e)
             {
@@ -116,6 +124,7 @@ namespace LiveDocs.Server.Services
             // consume the queue of expired replacements and re-fetch data
             while (!cancellationToken.IsCancellationRequested)
             {
+                _logger.LogDebug($"{_backgroundTaskQueue.ItemCount} items to process");
                 var workItem = await _backgroundTaskQueue.DequeueAsync(cancellationToken);
 
                 try
@@ -137,6 +146,8 @@ namespace LiveDocs.Server.Services
 
         ValueTask<Func<CancellationToken, ValueTask>> DequeueAsync(
             CancellationToken cancellationToken);
+
+        int ItemCount { get; }
     }
 
     public class BackgroundTaskQueue : IBackgroundTaskQueue
@@ -175,5 +186,7 @@ namespace LiveDocs.Server.Services
 
             return workItem;
         }
+
+        public int ItemCount => _queue.Reader.Count;
     }
 }

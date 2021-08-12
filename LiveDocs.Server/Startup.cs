@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
@@ -8,9 +9,11 @@ using Microsoft.Extensions.Hosting;
 using AJP.MediatrEndpoints;
 using AJP.MediatrEndpoints.EndpointRegistration;
 using LiveDocs.Server.config;
+using LiveDocs.Server.Hubs;
 using LiveDocs.Server.Replacers;
 using LiveDocs.Server.RequestHandlers;
 using LiveDocs.Server.Services;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 
 namespace LiveDocs.Server
@@ -39,13 +42,20 @@ namespace LiveDocs.Server
             services.AddSingleton<ISvcBusMessageInfoReplacer, SvcBusMessageInfoReplacer>();
             services.AddSingleton<ISqlStoredProcInfoReplacer, SqlStoredProcInfoReplacer>();
             services.AddSingleton<IStd18InfoReplacer, Std18InfoReplacer>();
-            
+
+            services.AddSignalR();
             services.AddControllersWithViews();
             services.AddRazorPages();
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "application/octet-stream" });
+            });
 
             services.AddMediatrEndpoints(typeof(Startup));
 
-            services.AddSingleton<IMarkdownReplacementAggregator, MarkdownReplacementAggregator>();
+            services.AddSingleton<IMarkdownReplacementAggregatorBackgroundService, MarkdownReplacementAggregatorBackgroundService>();
+            services.AddHostedService(sp => (MarkdownReplacementAggregatorBackgroundService)sp.GetService<IMarkdownReplacementAggregatorBackgroundService>());
 
             services.AddHttpClient("AzureDevOpsClient", c =>
             {
@@ -64,14 +74,13 @@ namespace LiveDocs.Server
         
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseResponseCompression();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-
-            // wake up the aggregator
-            app.ApplicationServices.GetService<IMarkdownReplacementAggregator>();
-
+            
             app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
@@ -83,10 +92,9 @@ namespace LiveDocs.Server
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapFallbackToFile("index.html");
-                
-                endpoints.MapGroupOfEndpointsForAPath("/api/v1/livedocs", "LiveDocs")
-                    .WithGet<GetLiveDocsRequest, GetLiveDocsResponse>("/{resourceName}");
 
+                endpoints.MapHub<LatestMarkdownHub>("/latestmarkdownhub");
+                
                 endpoints.MapGroupOfEndpointsForAPath("/api/v1/resources", "LiveDocsResources")
                     .WithGet<GetResourceDocumentationsRequest, GetResourceDocumentationsResponse>("/")
                     .WithPost<ReloadResourceDocumentationFilesRequest, ReloadResourceDocumentationFilesResponse>(

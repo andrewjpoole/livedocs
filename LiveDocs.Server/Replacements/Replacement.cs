@@ -13,5 +13,6 @@ namespace LiveDocs.Server.Replacements
         public DateTime Expired { get; set; } = DateTime.MinValue;
 
         public bool HasExpired() => DateTime.UtcNow > Expired;
+        public bool IsScheduled { get; set; }
     }
 }

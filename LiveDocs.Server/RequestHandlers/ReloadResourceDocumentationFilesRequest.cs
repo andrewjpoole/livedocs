@@ -15,16 +15,16 @@ namespace LiveDocs.Server.RequestHandlers
 
     public class ReloadResourceDocumentationFilesRequestHandler : IRequestHandler<ReloadResourceDocumentationFilesRequest, ReloadResourceDocumentationFilesResponse>
     {
-        private readonly IMarkdownReplacementAggregator _markdownReplacementAggregator;
+        private readonly IMarkdownReplacementAggregatorBackgroundService _markdownReplacementAggregatorBackgroundService;
 
-        public ReloadResourceDocumentationFilesRequestHandler(IMarkdownReplacementAggregator markdownReplacementAggregator)
+        public ReloadResourceDocumentationFilesRequestHandler(IMarkdownReplacementAggregatorBackgroundService markdownReplacementAggregatorBackgroundService)
         {
-            _markdownReplacementAggregator = markdownReplacementAggregator;
+            _markdownReplacementAggregatorBackgroundService = markdownReplacementAggregatorBackgroundService;
         }
 
         public async Task<ReloadResourceDocumentationFilesResponse> Handle(ReloadResourceDocumentationFilesRequest request, CancellationToken cancellationToken)
         {
-            _markdownReplacementAggregator.ReloadResourceDocumentationFiles();
+            await _markdownReplacementAggregatorBackgroundService.ReloadResourceDocumentationFiles();
             return new ReloadResourceDocumentationFilesResponse();
         }
     }
