@@ -20,6 +20,8 @@ namespace LiveDocs.Server
 {
     public class Startup
     {
+        private const string WellKnownAzureAdEndpointUri = "https://login.microsoftonline.com";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -63,6 +65,16 @@ namespace LiveDocs.Server
                 var authToken = Encoding.ASCII.GetBytes($"anything:{PAT}");
                 c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
                     Convert.ToBase64String(authToken));
+            });
+
+            services.AddHttpClient("AzureIAMClient", c =>
+            {
+                c.BaseAddress = new Uri(WellKnownAzureAdEndpointUri);
+            });
+            
+            services.AddHttpClient("AzureRMClient", c =>
+            {
+                c.BaseAddress = new Uri(Configuration["LiveDocs:azureResourceManagementApiBaseUri"]);
             });
 
             services.AddHttpClient("PublicUrlClient", c =>
