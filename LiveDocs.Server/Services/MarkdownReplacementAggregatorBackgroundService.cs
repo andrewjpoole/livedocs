@@ -125,6 +125,7 @@ namespace LiveDocs.Server.Services
         {
             _logger.LogInformation("MarkdownReplacementAggregatorBackgroundService running.");
             
+            // every 10 seconds, check through replacements, to see if any have expired or 
             _timer = new Timer(10_000);
             _timer.Elapsed += async (sender, e) => await DoWork();
             _timer.Start();

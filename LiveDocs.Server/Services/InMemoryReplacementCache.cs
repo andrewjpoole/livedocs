@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -70,7 +71,6 @@ namespace LiveDocs.Server.Services
                 return (name, _replacements[key].LatestReplacedData);
 
             // schedule a new replacement
-            //_logger.LogDebug($"expired replacement {name} will be re-fetched in the background");
             await _backgroundTaskQueue.QueueBackgroundWorkItemAsync(
                 async token => await RunReplacement(_replacements[key]));
 
@@ -88,11 +88,17 @@ namespace LiveDocs.Server.Services
         {
             try
             {
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+
                 //_logger.LogInformation($"Running {replacement.Match} using {replacement.Instruction} with TTL {replacement.TimeToLive}");
                 var replacer = (IReplacer)_serviceProvider.GetServiceByRegisteredTypeName(replacement.Instruction);
                 var renderedValue = await replacer.Render(replacement.Match);
                 replacement.LatestReplacedData = renderedValue;
                 replacement.IsScheduled = false;
+
+                stopwatch.Stop();
+                _logger.LogInformation($"{replacement.Match}:{replacement.Instruction} completed after {stopwatch.ElapsedMilliseconds}ms");
             }
             catch (Exception e)
             {

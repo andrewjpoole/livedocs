@@ -27,6 +27,10 @@ namespace LiveDocs.Server.Replacers
             var resourceGroup = _liveDocsOptions.Value.ServiceBus.ResourceGroupName;
             var serviceBusNamespace = _liveDocsOptions.Value.ServiceBus.NamespaceName;
 
+            var localDevMachineNamePrefix = "lddvlt12121846-"; // todo consider if we need some kind a of environment context that we can DI in?
+            localDevMachineNamePrefix = "";
+            queueName = $"{localDevMachineNamePrefix}{queueName}";
+
             var requestUri = $"subscriptions/{_subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.ServiceBus/namespaces/{serviceBusNamespace}/queues/{queueName}?api-version=2017-04-01";
             var stats = await _azureRmApiClient.Query<ServiceBusGetQueueResponse>(requestUri);
 

@@ -15,7 +15,7 @@ namespace LiveDocs.Server.Services
     {
         private readonly IOptions<StronglyTypedConfig.AzureAd> _azureAdOptions;
         private readonly ILogger<AzureIAMTokenFetcher> _logger;
-        private const string WellKnownAzureAdEndpointUri = "https://login.microsoftonline.com";
+        private readonly IHttpClientFactory _clientFactory;
         private const string GrantTypeHeaderKeyName = "grant_type";
         private const string GrantTypeHeaderKeyValue = "client_credentials";
         private const string ClientIdHeaderKeyName = "client_id";
@@ -26,20 +26,19 @@ namespace LiveDocs.Server.Services
         public string BearerHeaderValue => $"Bearer {Token.RawData}";
         public JwtSecurityToken Token { get; private set; }
 
-        public AzureIAMTokenFetcher(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, ILogger<AzureIAMTokenFetcher> logger)
+        public AzureIAMTokenFetcher(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, ILogger<AzureIAMTokenFetcher> logger, IHttpClientFactory clientFactory)
         {
             _azureAdOptions = azureAdOptions;
             _logger = logger;
+            _clientFactory = clientFactory;
         }
 
         public async Task Fetch()
         {
             try
             {
-                using var httpClient = new HttpClient(); // TODO use a clientfactory
-                var uriString = WellKnownAzureAdEndpointUri;
-                httpClient.BaseAddress = new Uri(uriString);
-
+                using var httpClient = _clientFactory.CreateClient("AzureIAMClient");
+                
                 var request = new HttpRequestMessage(HttpMethod.Post, $"{_azureAdOptions.Value.TenantId}{AzureTokenUriPart}");
                 var formContents = new List<KeyValuePair<string, string>>
                 {
