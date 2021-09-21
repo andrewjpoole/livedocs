@@ -124,7 +124,7 @@ namespace LiveDocs.Server.Replacers
 
             sb.AppendLine("| Property | Value |");
             sb.AppendLine("| -------- | ----- |");
-            sb.AppendLine($"| Swift Filename | {filename} |"); // ToDo Use swift filename parser to get more info
+            sb.AppendLine($"| Swift Filename | {filename} |"); // ToDo Use swift filename parser to get more info?
             sb.AppendLine($"| Blob Name | {blobName} |");
             sb.AppendLine($"| Hdr1Label.CreationDate (YYDDD)| {std18.Hdr1Label.CreationDate} -> {ConvertJulianDate(std18.Hdr1Label.CreationDate):dddd yy-MM-dd}|");
             sb.AppendLine($"| Hdr1Label.ExpirationDate (YYDDD) | {std18.Hdr1Label.ExpirationDate} -> {ConvertJulianDate(std18.Hdr1Label.ExpirationDate):dddd yy-MM-dd}|");

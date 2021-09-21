@@ -21,7 +21,7 @@ using Timer = System.Timers.Timer;
 namespace LiveDocs.Server.Services
 {
     /// <summary>
-    /// Service which fetches resource documentation files, registers replacements with the cache and serves the replaced markdown on a timer
+    /// Service which fetches all resource documentation files, registers replacements with the cache and serves the replaced markdown on a timer
     /// </summary>
     public class MarkdownReplacementAggregatorBackgroundService : IHostedService, IMarkdownReplacementAggregatorBackgroundService, IDisposable
     {
@@ -125,8 +125,8 @@ namespace LiveDocs.Server.Services
         {
             _logger.LogInformation("MarkdownReplacementAggregatorBackgroundService running.");
             
-            // every 10 seconds, check through replacements, to see if any have expired or 
-            _timer = new Timer(10_000);
+            // every 10 seconds, check through replacements, build markdown from latest available data
+            _timer = new Timer(10_000); // todo consider making this definable via the UI + signalR? like SF explorer
             _timer.Elapsed += async (sender, e) => await DoWork();
             _timer.Start();
 
@@ -135,9 +135,6 @@ namespace LiveDocs.Server.Services
 
         private async Task DoWork()
         {
-            var sw = new Stopwatch();
-            sw.Start();
-
             foreach (var resource in _resourceDocumentations.Values)
             {
                 // ToDO figure out if there are any connected clients in this resource group and skip if not?
@@ -150,16 +147,14 @@ namespace LiveDocs.Server.Services
 
                 var results = await Task.WhenAll(tasks);
 
-                foreach (var replacedValue in results.ToList())
+                foreach (var (Name, Data) in results.ToList())
                 {
-                    _markdownBuilder.Replace($"{ReplacementPrefix}{replacedValue.Name}{ReplacementSuffix}", replacedValue.Data);
+                    _markdownBuilder.Replace($"{ReplacementPrefix}{Name}{ReplacementSuffix}", Data);
                 }
 
                 _logger.LogInformation($"sending markdown for {resource.Name}");
                 await _latestMarkdownHub.Clients.Group(resource.Name).SendAsync("SendLatestMarkdownToInterestedClients", _markdownBuilder.ToString());
             }
-            sw.Stop();
-            _logger.LogInformation($"timer DoWork completed after {sw.ElapsedMilliseconds}ms");
         }
 
         public Task StopAsync(CancellationToken stoppingToken)

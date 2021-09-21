@@ -13,6 +13,14 @@ namespace LiveDocs.Server
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(logging =>
+                {
+                    logging.AddSimpleConsole(options =>
+                    {
+                        options.TimestampFormat = "[yyyy-MM-dd HH:mm:ss:fff] ";
+                        options.UseUtcTimestamp = true;
+                    });
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
