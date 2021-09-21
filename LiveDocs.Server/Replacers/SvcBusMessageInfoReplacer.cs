@@ -1,10 +1,9 @@
 using System;
-using System.Net.Http.Headers;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using LiveDocs.Server.config;
 using LiveDocs.Server.Models;
 using LiveDocs.Server.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace LiveDocs.Server.Replacers
@@ -26,8 +25,8 @@ namespace LiveDocs.Server.Replacers
         {
             var resourceGroup = _liveDocsOptions.Value.ServiceBus.ResourceGroupName;
             var serviceBusNamespace = _liveDocsOptions.Value.ServiceBus.NamespaceName;
-
-            var localDevMachineNamePrefix = "lddvlt12121846-"; // todo consider if we need some kind a of environment context that we can DI in?
+            
+            var localDevMachineNamePrefix = Debugger.IsAttached ? $"{Environment.MachineName}-" : string.Empty;
             localDevMachineNamePrefix = "";
             queueName = $"{localDevMachineNamePrefix}{queueName}";
 

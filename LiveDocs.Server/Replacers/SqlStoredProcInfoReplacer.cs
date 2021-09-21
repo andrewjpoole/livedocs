@@ -36,6 +36,7 @@ namespace LiveDocs.Server.Replacers
 
                 command.CommandType = CommandType.StoredProcedure;
                 //cmd.Parameters.Add(new SqlParameter("@CustomerID", custId));
+                command.CommandTimeout = 120;
 
                 var sbColumnNames = new StringBuilder("|");
                 var sbColumnAlignment = new StringBuilder("|");
@@ -43,6 +44,9 @@ namespace LiveDocs.Server.Replacers
 
                 await using var reader = await command.ExecuteReaderAsync();
                 var columns = await reader.GetColumnSchemaAsync();
+
+                // todo for scalar queries return just the data, rather than a markdown table?
+
                 foreach (var dbColumn in columns)
                 {
                     sbColumnNames.Append($" {dbColumn.ColumnName} |");
