@@ -25,6 +25,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine($"OnInitializedAsync for {Page}");
+
         await base.OnInitializedAsync();
 
         hubConnection = new HubConnectionBuilder()
@@ -44,16 +46,24 @@
             _lastRendered = DateTime.Now;
             StateHasChanged();
 
-            // set scrollstate to same as before updating markdown
+            // set scroll state to same as before updating markdown
             await _scrollInterface.InvokeVoidAsync("setScroll", scrollState.X, scrollState.Y);
         });
 
         await hubConnection.StartAsync();
 
         await hubConnection.SendAsync("SelectResource", Page);
-        
+        Console.WriteLine($"SelectResource called for {Page}");
     }
-   
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await hubConnection.SendAsync("SelectResource", Page);
+        Console.WriteLine($"SelectResource called for {Page}");
+
+        await base.OnParametersSetAsync();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
