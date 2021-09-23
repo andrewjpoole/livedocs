@@ -53,7 +53,9 @@ namespace LiveDocs.Server
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
                     new[] { "application/octet-stream" });
             });
-
+            services.AddSingleton<IFileContentDownloader, FileContentDownloader>();
+            services.AddSingleton<IHubGroupTracker, HubGroupTracker>();
+            
             services.AddMediatrEndpoints(typeof(Startup));
 
             services.AddSingleton<IMarkdownReplacementAggregatorBackgroundService, MarkdownReplacementAggregatorBackgroundService>();
@@ -81,7 +83,7 @@ namespace LiveDocs.Server
             {
             });
 
-            services.AddSingleton<IFileContentDownloader, FileContentDownloader>();
+            
         }
         
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

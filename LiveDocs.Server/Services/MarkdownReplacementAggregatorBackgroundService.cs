@@ -31,6 +31,7 @@ namespace LiveDocs.Server.Services
         private readonly IFileContentDownloader _fileContentDownloader;
         private readonly IReplacementCache _replacementCache;
         private readonly IHubContext<LatestMarkdownHub> _latestMarkdownHub;
+        private readonly IHubGroupTracker _hubGroupTracker;
         private StringBuilder _markdownBuilder;
         private const string ReplacementPrefix = "<<";
         private const string ReplacementSuffix = ">>";
@@ -47,13 +48,16 @@ namespace LiveDocs.Server.Services
             IOptions<StronglyTypedConfig.LiveDocs> liveDocsOptions, 
             ILogger<MarkdownReplacementAggregatorBackgroundService> logger, 
             IFileContentDownloader fileContentDownloader,
-            IReplacementCache replacementCache, IHubContext<LatestMarkdownHub> latestMarkdownHub)
+            IReplacementCache replacementCache, 
+            IHubContext<LatestMarkdownHub> latestMarkdownHub, 
+            IHubGroupTracker hubGroupTracker)
         {
             _liveDocsOptions = liveDocsOptions;
             _logger = logger;
             _fileContentDownloader = fileContentDownloader;
             _replacementCache = replacementCache;
             _latestMarkdownHub = latestMarkdownHub;
+            _hubGroupTracker = hubGroupTracker;
 
             _ = LoadResourceDocumentations();
         }
@@ -121,6 +125,12 @@ namespace LiveDocs.Server.Services
             await LoadResourceDocumentations();
         }
 
+        // Called by the Hub, so new group members dont have to wait for the next DoWork loop
+        public async Task SendLatestMarkDownForNewGroupMember(string resourceName, string connectionId)
+        {
+            await _latestMarkdownHub.Clients.Clients(connectionId).SendAsync("SendLatestMarkdownToInterestedClients", _resourceDocumentations[resourceName].RenderedMarkdown);
+        }
+
         public Task StartAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("MarkdownReplacementAggregatorBackgroundService running.");
@@ -137,7 +147,8 @@ namespace LiveDocs.Server.Services
         {
             foreach (var resource in _resourceDocumentations.Values)
             {
-                // ToDO figure out if there are any connected clients in this resource group and skip if not?
+                if (_hubGroupTracker.GroupHasConnections(resource.Name) == false)
+                    continue;
 
                 _markdownBuilder = new StringBuilder(resource.RawMarkdown);
 
@@ -152,17 +163,19 @@ namespace LiveDocs.Server.Services
                     _markdownBuilder.Replace($"{ReplacementPrefix}{Name}{ReplacementSuffix}", Data);
                 }
 
+                // todo consider hashing and comparing to previous markdown and only send if its changed?
+
+                resource.RenderedMarkdown = _markdownBuilder.ToString();
+
                 _logger.LogInformation($"sending markdown for {resource.Name}");
-                await _latestMarkdownHub.Clients.Group(resource.Name).SendAsync("SendLatestMarkdownToInterestedClients", _markdownBuilder.ToString());
+                await _latestMarkdownHub.Clients.Group(resource.Name).SendAsync("SendLatestMarkdownToInterestedClients", resource.RenderedMarkdown);
             }
         }
 
         public Task StopAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("MarkdownReplacementAggregatorBackgroundService stopping.");
-
             _timer?.Stop();
-
             return Task.CompletedTask;
         }
 
