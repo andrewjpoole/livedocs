@@ -4,6 +4,6 @@ namespace LiveDocs.Server.Models
 {
     public class ResourceDocumentationFileListing
     {
-        public List<ResourceDocumentationFile> Files { get; set; }
+        public List<ResourceDocumentationFile> Files { get; set; } = new();
     }
 }

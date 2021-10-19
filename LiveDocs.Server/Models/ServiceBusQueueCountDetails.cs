@@ -1,3 +1,5 @@
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
 namespace LiveDocs.Server.Models
 {
     public class ServiceBusQueueCountDetails

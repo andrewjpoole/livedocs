@@ -1,12 +1,11 @@
 ﻿@page "/{page}"
 @implements IAsyncDisposable
 @attribute [Authorize]
-@using System.Threading
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.SignalR.Client
-@inject NavigationManager NavigationManager
-@inject HttpClient Http
-@inject IJSRuntime Js
+@inject NavigationManager _navigationManager
+@inject HttpClient _http
+@inject IJSRuntime _js
 
 <p>LiveDocs @Page Resource Documentation, last rendered @_lastRendered</p>
 
@@ -14,9 +13,8 @@
                                                       Class="markdown-body" />
 
 @code {
-    private HubConnection hubConnection;
+    private HubConnection _hubConnection;
     public string MarkdownText = "#### waiting for markdown and data to be rendered...";
-    private Timer _timer;
     private IJSObjectReference _scrollInterface;
     private DateTime _lastRendered = DateTime.Now;
 
@@ -29,11 +27,11 @@
 
         await base.OnInitializedAsync();
 
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri("/latestmarkdownhub"))
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(_navigationManager.ToAbsoluteUri("/latestmarkdownhub"))
             .Build();
 
-        hubConnection.On<string>("SendLatestMarkdownToInterestedClients", async (newMarkdown) =>
+        _hubConnection.On<string>("SendLatestMarkdownToInterestedClients", async (newMarkdown) =>
         {
             Console.WriteLine("New markdown received");
 
@@ -50,15 +48,15 @@
             await _scrollInterface.InvokeVoidAsync("setScroll", scrollState.X, scrollState.Y);
         });
 
-        await hubConnection.StartAsync();
+        await _hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("SelectResource", Page);
+        await _hubConnection.SendAsync("SelectResource", Page);
         Console.WriteLine($"SelectResource called for {Page}");
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        await hubConnection.SendAsync("SelectResource", Page);
+        await _hubConnection.SendAsync("SelectResource", Page);
         Console.WriteLine($"SelectResource called for {Page}");
 
         await base.OnParametersSetAsync();
@@ -68,7 +66,7 @@
     {
         if (firstRender)
         {
-            _scrollInterface = await Js.InvokeAsync<IJSObjectReference>("import", "./scroll-interface.js");
+            _scrollInterface = await _js.InvokeAsync<IJSObjectReference>("import", "./scroll-interface.js");
         }
     }
 

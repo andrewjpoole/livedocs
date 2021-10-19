@@ -23,8 +23,8 @@ namespace LiveDocs.Server.Services
         private const string ResourceHeaderKeyName = "resource";
         private const string AzureTokenUriPart = "/oauth2/token";
 
-        public string BearerHeaderValue => $"Bearer {Token.RawData}";
-        public JwtSecurityToken Token { get; private set; }
+        public string BearerHeaderValue => $"Bearer {Token?.RawData}";
+        public JwtSecurityToken? Token { get; private set; }
 
         public AzureIAMTokenFetcher(IOptions<StronglyTypedConfig.AzureAd> azureAdOptions, ILogger<AzureIAMTokenFetcher> logger, IHttpClientFactory clientFactory)
         {
@@ -40,7 +40,7 @@ namespace LiveDocs.Server.Services
                 using var httpClient = _clientFactory.CreateClient("AzureIAMClient");
                 
                 var request = new HttpRequestMessage(HttpMethod.Post, $"{_azureAdOptions.Value.TenantId}{AzureTokenUriPart}");
-                var formContents = new List<KeyValuePair<string, string>>
+                var formContents = new List<KeyValuePair<string?, string?>>
                 {
                     new(GrantTypeHeaderKeyName, GrantTypeHeaderKeyValue),
                     new(ClientIdHeaderKeyName, _azureAdOptions.Value.ClientId),
@@ -57,7 +57,7 @@ namespace LiveDocs.Server.Services
                 }
 
                 var tokenResponse = await JsonSerializer.DeserializeAsync<OathTokenResponse>(response.Content.ReadAsStream());
-                Token = new JwtSecurityToken(tokenResponse.access_token);
+                Token = new JwtSecurityToken(tokenResponse?.access_token);
             }
             catch (Exception e)
             {

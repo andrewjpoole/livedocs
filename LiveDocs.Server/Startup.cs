@@ -39,7 +39,7 @@ namespace LiveDocs.Server
 
             services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundTaskQueue(50));
             services.AddSingleton<IReplacementCache, InMemoryReplacementCache>();
-            services.AddHostedService(sp => (InMemoryReplacementCache)sp.GetService<IReplacementCache>());
+            services.AddHostedService(sp => sp.GetService<IReplacementCache>() as InMemoryReplacementCache);
             
             services.AddSingleton<ISvcBusMessageInfoReplacer, SvcBusMessageInfoReplacer>();
             services.AddSingleton<ISqlStoredProcInfoReplacer, SqlStoredProcInfoReplacer>();
@@ -59,7 +59,7 @@ namespace LiveDocs.Server
             services.AddMediatrEndpoints(typeof(Startup));
 
             services.AddSingleton<IMarkdownReplacementAggregatorBackgroundService, MarkdownReplacementAggregatorBackgroundService>();
-            services.AddHostedService(sp => (MarkdownReplacementAggregatorBackgroundService)sp.GetService<IMarkdownReplacementAggregatorBackgroundService>());
+            services.AddHostedService(sp => sp.GetService<IMarkdownReplacementAggregatorBackgroundService>() as MarkdownReplacementAggregatorBackgroundService);
 
             services.AddHttpClient("AzureDevOpsClient", c =>
             {

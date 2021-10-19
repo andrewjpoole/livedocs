@@ -104,7 +104,7 @@ namespace LiveDocs.Server.Services
             }
             catch (Exception e)
             {
-                _logger.LogError(e, $"Error thrown while compiling markdown {e.Message}");
+                _logger.LogError(e, $"Error thrown while compiling markdown:\n{e.Message}");
                 replacement.LatestReplacedData = $"Failed to replace {replacement.Match}!";
             }
         }

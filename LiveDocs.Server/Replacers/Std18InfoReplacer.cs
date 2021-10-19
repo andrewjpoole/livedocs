@@ -17,15 +17,18 @@ namespace LiveDocs.Server.Replacers
 {
     public class Std18InfoReplacer : IStd18InfoReplacer
     {
-        private readonly IConfiguration _configuration;
         private readonly ILogger<Std18InfoReplacer> _logger;
-        private BlobServiceClient _blobServiceClient;
-        private BlobContainerClient _containerClient;
+        private readonly BlobContainerClient _containerClient;
 
         public Std18InfoReplacer(IConfiguration configuration, ILogger<Std18InfoReplacer> logger)
         {
-            _configuration = configuration;
             _logger = logger;
+
+            var connectionString = configuration.GetConnectionString("mainAzureStorageAccount");
+            var blobServiceClient = new BlobServiceClient(connectionString);
+
+            const string containerName = "inbound-send-to-swift-bacs";
+            _containerClient = blobServiceClient.GetBlobContainerClient(containerName);
         }
 
         public async Task<string> Render(string replacementTokenMatch)
@@ -38,13 +41,6 @@ namespace LiveDocs.Server.Replacers
             var stringBuilder = new StringBuilder();
             try
             {
-
-                var connectionString = _configuration.GetConnectionString("mainAzureStorageAccount");
-                _blobServiceClient = new BlobServiceClient(connectionString);
-
-                const string containerName = "inbound-send-to-swift-bacs";
-                _containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-
                 // ToDo pre-fetch blob names from somewhere else, app insights, sql, elastic?
                 var blobItemNames = new List<string> {"0051404b-a895-456b-9607-60019afa3052.json"};
                 
@@ -185,12 +181,12 @@ namespace LiveDocs.Server.Replacers
         /// <summary>
         /// The filename specified in the DataPdu
         /// </summary>
-        public string FileLogicalName { get; set; }
+        public string FileLogicalName { get; set; } = string.Empty;
 
         /// <summary>
         /// Attachment stored as a base64 string.
         /// </summary>
-        public string Attachment { get; set; }
+        public string Attachment { get; set; } = string.Empty;
     }
 
     public class GzipCompressor 
@@ -205,16 +201,11 @@ namespace LiveDocs.Server.Replacers
         /// </summary>
         public byte[] Compress(byte[] bytes)
         {
+            using var compressIntoMs = new MemoryStream();
+            using var gzs = new BufferedStream(new GZipStream(compressIntoMs, CompressionMode.Compress), DefaultBufferSize);
+            gzs.Write(bytes, 0, bytes.Length);
 
-            using (var compressIntoMs = new MemoryStream())
-            {
-                using (var gzs = new BufferedStream(new GZipStream(compressIntoMs, CompressionMode.Compress), DefaultBufferSize))
-                {
-                    gzs.Write(bytes, 0, bytes.Length);
-                }
-
-                return compressIntoMs.ToArray();
-            }
+            return compressIntoMs.ToArray();
         }
 
         /// <summary>
@@ -222,18 +213,12 @@ namespace LiveDocs.Server.Replacers
         /// </summary>
         public byte[] Decompress(byte[] bytes)
         {
-            using (var compressedMs = new MemoryStream(bytes))
-            {
-                using (var decompressedMs = new MemoryStream())
-                {
-                    using (var stream = new BufferedStream(new GZipStream(compressedMs, CompressionMode.Decompress), DefaultBufferSize))
-                    {
-                        stream.CopyTo(decompressedMs);
-                    }
+            using var compressedMs = new MemoryStream(bytes);
+            using var decompressedMs = new MemoryStream();
+            using var stream = new BufferedStream(new GZipStream(compressedMs, CompressionMode.Decompress), DefaultBufferSize);
+            stream.CopyTo(decompressedMs);
 
-                    return decompressedMs.ToArray();
-                }
-            }
+            return decompressedMs.ToArray();
         }
     }
 }

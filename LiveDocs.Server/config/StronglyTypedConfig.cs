@@ -5,26 +5,26 @@
         public class AzureAd
         {
             public const string ConfigKey = "AzureAD";
-            public string TenantId { get; set; }
-            public string ClientId { get; set; }
-            public string ClientSecret { get; set; }
-            public string Resource { get; set; }
+            public string TenantId { get; set; } = string.Empty;
+            public string ClientId { get; set; } = string.Empty;
+            public string ClientSecret { get; set; } = string.Empty;
+            public string Resource { get; set; } = string.Empty;
         }
 
         public class ServiceBus
         {
-            public string ResourceGroupName { get; set; }
-            public string NamespaceName { get; set; }
+            public string ResourceGroupName { get; set; } = string.Empty;
+            public string NamespaceName { get; set; } = string.Empty;
         }
 
         public class LiveDocs
         {
             public const string ConfigKey = "LiveDocs";
-            public string AzureDevOpsPat { get; set; }
-            public string AzureResourceManagementApiBaseUri { get; set; }
-            public string SubscriptionId { get; set; }
-            public ServiceBus ServiceBus { get; set; }
-            public string ResourceDocumentationFileListing { get; set; }
+            public string AzureDevOpsPat { get; set; } = string.Empty;
+            public string AzureResourceManagementApiBaseUri { get; set; } = string.Empty;
+            public string SubscriptionId { get; set; } = string.Empty;
+            public ServiceBus ServiceBus { get; set; } = new();
+            public string ResourceDocumentationFileListing { get; set; } = string.Empty;
         }
     }
 }

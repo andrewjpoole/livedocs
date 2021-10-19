@@ -6,7 +6,7 @@ namespace LiveDocs.Server.Services
     public interface IAzureIAMTokenFetcher
     {
         string BearerHeaderValue { get; }
-        JwtSecurityToken Token { get; }
+        JwtSecurityToken? Token { get; }
         Task Fetch();
     }
 }

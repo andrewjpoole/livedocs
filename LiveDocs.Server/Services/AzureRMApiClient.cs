@@ -13,7 +13,7 @@ namespace LiveDocs.Server.Services
 
         public AzureRMApiClient(IAzureIAMTokenFetcher tokenFetcher, IHttpClientFactory clientFactory)
         {
-            _tokenFetcher = tokenFetcher;
+            _tokenFetcher = tokenFetcher ?? throw new ArgumentNullException(nameof(tokenFetcher));
             _clientFactory = clientFactory;
         }
 
@@ -21,7 +21,7 @@ namespace LiveDocs.Server.Services
         {
             if (_tokenFetcher?.Token is null || _tokenFetcher.Token.ValidTo < DateTime.UtcNow)
             {
-                await _tokenFetcher.Fetch();
+                await _tokenFetcher!.Fetch();
             }
 
             using var httpClient = _clientFactory.CreateClient("AzureRMClient");
@@ -33,7 +33,9 @@ namespace LiveDocs.Server.Services
             if (!response.IsSuccessStatusCode)
                 throw new ApplicationException($"Unable to query Azure Resource Management API. {response.StatusCode} {response.Content.ReadAsStreamAsync()}");
 
-            return await JsonSerializer.DeserializeAsync<T>(response.Content.ReadAsStream(), new JsonSerializerOptions{PropertyNameCaseInsensitive = true});
+            var result = await JsonSerializer.DeserializeAsync<T>(response.Content.ReadAsStream(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            return result ?? throw new Exception("Unable to deserialize the response");
         }
     }
 }

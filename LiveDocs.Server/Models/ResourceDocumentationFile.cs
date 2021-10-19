@@ -2,10 +2,10 @@
 {
     public class ResourceDocumentationFile
     {
-        public string Name { get; set; }
-        public string MdPath { get; set; }
-        public string JsonPath { get; set; }
-        public string Domain { get; set; }
-        public string SubDomain { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string MdPath { get; set; } = string.Empty;
+        public string JsonPath { get; set; } = string.Empty;
+        public string Domain { get; set; } = string.Empty;
+        public string SubDomain { get; set; } = string.Empty;
     }
 }

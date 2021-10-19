@@ -25,19 +25,19 @@ namespace LiveDocs.Server.Services
     /// </summary>
     public class MarkdownReplacementAggregatorBackgroundService : IHostedService, IMarkdownReplacementAggregatorBackgroundService, IDisposable
     {
-        private Timer _timer;
+        private Timer _timer = new(10_000);
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
         private readonly ILogger<MarkdownReplacementAggregatorBackgroundService> _logger;
         private readonly IFileContentDownloader _fileContentDownloader;
         private readonly IReplacementCache _replacementCache;
         private readonly IHubContext<LatestMarkdownHub> _latestMarkdownHub;
         private readonly IHubGroupTracker _hubGroupTracker;
-        private StringBuilder _markdownBuilder;
+        private StringBuilder _markdownBuilder = new();
         private const string ReplacementPrefix = "<<";
         private const string ReplacementSuffix = ">>";
         private Dictionary<string, ResourceDocumentation> _resourceDocumentations = new();
-        private string PreviousResourceDocumentationFilesJsonHash { get; set; }
-        private JsonSerializerOptions _jsonOptions = new()
+        private string PreviousResourceDocumentationFilesJsonHash { get; set; } = string.Empty;
+        private readonly JsonSerializerOptions _jsonOptions = new()
         {
             AllowTrailingCommas = true,
             ReadCommentHandling = JsonCommentHandling.Skip
@@ -66,8 +66,7 @@ namespace LiveDocs.Server.Services
         {
             _logger.LogInformation("Loading Resource Documentation files...");
             var resourceDocumentationFilesJson = await GetFileContents(_liveDocsOptions.Value.ResourceDocumentationFileListing);
-
-
+            
             var resourceDocumentationFilesJsonHash = HashString(resourceDocumentationFilesJson);
             if (resourceDocumentationFilesJsonHash == PreviousResourceDocumentationFilesJsonHash)
                return;
@@ -79,16 +78,20 @@ namespace LiveDocs.Server.Services
             _replacementCache.ClearCache();
 
             var resourceDocFiles = JsonSerializer.Deserialize<ResourceDocumentationFileListing>(resourceDocumentationFilesJson);
-            
+
+            if (resourceDocFiles is null)
+                throw new Exception("Could not fetch and/or deserialize Resource Documentation files");
+
             foreach (var file in resourceDocFiles.Files)
             {
-                var markdown = await GetFileContents(file.MdPath);
-                var json = await GetFileContents(file.JsonPath);
+                var markdown = await GetFileContents(file.MdPath) ?? throw new Exception($"Markdown string for {file.Name} is null");
+                var json = await GetFileContents(file.JsonPath) ?? throw new Exception($"Json string for {file.Name} is null");
+                var replacementConfig = JsonSerializer.Deserialize<ReplacementConfig>(json, _jsonOptions) ?? throw new Exception($"Could not deserialize Replacements for {file.Name}");
                 var newResourceDocumentation = new ResourceDocumentation
                 {
                     Name = file.Name,
                     RawMarkdown = markdown,
-                    Replacements = JsonSerializer.Deserialize<ReplacementConfig>(json, _jsonOptions).Replacements
+                    Replacements = replacementConfig.Replacements
                 };
                 _resourceDocumentations.Add(file.Name, newResourceDocumentation);
                 
