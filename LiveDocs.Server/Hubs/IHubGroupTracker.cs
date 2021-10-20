@@ -2,7 +2,7 @@
 {
     public interface IHubGroupTracker
     {
-        void MoveConnectionIdToGroup(string connectionId, string groupName);
+        void MoveConnectionIdToGroup(string connectionId, string UserIdentifier, string groupName);
 
         void RemoveConnectionIdFromAllGroups(string connectionId);
 

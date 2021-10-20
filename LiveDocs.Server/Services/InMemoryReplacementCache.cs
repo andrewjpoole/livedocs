@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 using Kusto.Data.Common;
 using LiveDocs.Server.Replacements;
 using LiveDocs.Server.Replacers;
+using LiveDocs.Server.RequestHandlers;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace LiveDocs.Server.Services
 {
-    public class InMemoryReplacementCache : BackgroundService, IReplacementCache
+    public class InMemoryReplacementCache : BackgroundService, IReplacementCache, IInMemoryReplacementCacheBackgroundTaskQueueStats
     {
         private readonly ILogger<InMemoryReplacementCache> _logger;
         private readonly IServiceProvider _serviceProvider;
@@ -144,6 +145,14 @@ namespace LiveDocs.Server.Services
                     _logger.LogError(ex, "Error occurred executing {WorkItem}.", nameof(workItem));
                 }
             }
+        }
+
+        public async Task<object> GetStats()
+        {
+            return new
+            {
+                OutstandingTaskCount = _backgroundTaskQueue.ItemCount
+            };
         }
     }
 }

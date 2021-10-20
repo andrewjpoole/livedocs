@@ -12,6 +12,7 @@ using LiveDocs.Server.config;
 using LiveDocs.Server.Hubs;
 using LiveDocs.Server.Models;
 using LiveDocs.Server.Replacements;
+using LiveDocs.Server.RequestHandlers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ namespace LiveDocs.Server.Services
     /// <summary>
     /// Service which fetches all resource documentation files, registers replacements with the cache and serves the replaced markdown on a timer
     /// </summary>
-    public class MarkdownReplacementAggregatorBackgroundService : IHostedService, IMarkdownReplacementAggregatorBackgroundService, IDisposable
+    public class MarkdownReplacementAggregatorBackgroundService : IHostedService, IMarkdownReplacementAggregatorBackgroundService, IResourceDocumentationStats, IDisposable
     {
         private Timer _timer = new(10_000);
         private readonly IOptions<StronglyTypedConfig.LiveDocs> _liveDocsOptions;
@@ -185,6 +186,26 @@ namespace LiveDocs.Server.Services
         public void Dispose()
         {
             _timer?.Dispose();
+        }
+
+        public async Task<object> GetStats()
+        {
+            return new
+            {
+                ResourceDocumentionFiles = _resourceDocumentations.Select(x => new
+                {
+                    Name = x.Key,
+                    Replacements = x.Value.Replacements.Select(y => new
+                    {
+                        y.Instruction,
+                        y.Match,
+                        y.TimeToLive,
+                        y.Expired,
+                        HasExpired = y.HasExpired(),
+                        y.IsScheduled
+                    })
+                })
+            };
         }
     }
 }

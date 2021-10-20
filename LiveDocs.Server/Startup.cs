@@ -38,7 +38,9 @@ namespace LiveDocs.Server
             services.AddSingleton<IAzureRMApiClient, AzureRMApiClient>();
 
             services.AddSingleton<IBackgroundTaskQueue>(ctx => new BackgroundTaskQueue(50));
-            services.AddSingleton<IReplacementCache, InMemoryReplacementCache>();
+            services.AddSingleton<InMemoryReplacementCache>();
+            services.AddSingleton<IReplacementCache>(sp => sp.GetRequiredService<InMemoryReplacementCache>());
+            services.AddSingleton<IInMemoryReplacementCacheBackgroundTaskQueueStats>(sp => sp.GetRequiredService<InMemoryReplacementCache>());
             services.AddHostedService(sp => sp.GetService<IReplacementCache>() as InMemoryReplacementCache);
             
             services.AddSingleton<ISvcBusMessageInfoReplacer, SvcBusMessageInfoReplacer>();
@@ -54,11 +56,15 @@ namespace LiveDocs.Server
                     new[] { "application/octet-stream" });
             });
             services.AddSingleton<IFileContentDownloader, FileContentDownloader>();
-            services.AddSingleton<IHubGroupTracker, HubGroupTracker>();
+            services.AddSingleton<HubGroupTracker>();
+            services.AddSingleton<IHubGroupTracker>(sp => sp.GetRequiredService<HubGroupTracker>());
+            services.AddSingleton<IConnectedClientStats>(sp => sp.GetRequiredService<HubGroupTracker>());
             
             services.AddMediatrEndpoints(typeof(Startup));
 
-            services.AddSingleton<IMarkdownReplacementAggregatorBackgroundService, MarkdownReplacementAggregatorBackgroundService>();
+            services.AddSingleton<MarkdownReplacementAggregatorBackgroundService>();
+            services.AddSingleton<IMarkdownReplacementAggregatorBackgroundService>(sp => sp.GetRequiredService<MarkdownReplacementAggregatorBackgroundService>());
+            services.AddSingleton<IResourceDocumentationStats>(sp => sp.GetRequiredService<MarkdownReplacementAggregatorBackgroundService>());
             services.AddHostedService(sp => sp.GetService<IMarkdownReplacementAggregatorBackgroundService>() as MarkdownReplacementAggregatorBackgroundService);
 
             services.AddHttpClient("AzureDevOpsClient", c =>
@@ -108,11 +114,14 @@ namespace LiveDocs.Server
                 endpoints.MapFallbackToFile("index.html");
 
                 endpoints.MapHub<LatestMarkdownHub>("/latestmarkdownhub");
-                
+
                 endpoints.MapGroupOfEndpointsForAPath("/api/v1/resources", "LiveDocsResources")
                     .WithGet<GetResourceDocumentationsRequest, GetResourceDocumentationsResponse>("/")
                     .WithPost<ReloadResourceDocumentationFilesRequest, ReloadResourceDocumentationFilesResponse>(
                         "/reload", "Reload the Resource Documentation files i.e. to reflect recent changes.");
+
+                endpoints.MapGroupOfEndpointsForAPath("/api/v1/stats", "Stats")
+                    .WithGet<GetStatsRequest, GetStatsResponse>("/");
             });
         }
     }

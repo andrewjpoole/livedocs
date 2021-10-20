@@ -27,8 +27,8 @@ namespace LiveDocs.Server.Hubs
             _logger.LogInformation($"SignalR client {Context.ConnectionId} requesting markdown for {resource}");
 
             await Groups.AddToGroupAsync(Context.ConnectionId, resource);
-            _hubGroupTracker.MoveConnectionIdToGroup(Context.ConnectionId, resource);
-
+            _hubGroupTracker.MoveConnectionIdToGroup(Context.ConnectionId, Context.UserIdentifier ?? "UserIdentifier was null", resource);
+            
             await _markdownReplacementAggregatorBackgroundService.SendLatestMarkDownForNewGroupMember(resource, Context.ConnectionId);
         }
 
