@@ -1,4 +1,8 @@
-﻿@inject HttpClient _http
+﻿@inject IHttpClientFactory _clientFacotry;
+@inject AuthenticationStateProvider _authenticationStateProvider;
+@inject IJSRuntime _js
+@inject IAccessTokenProvider _tokenProvider
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">LiveDocs</a>
@@ -24,6 +28,10 @@
             }
         }
     </ul>
+    <a href="./swagger" target="_blank">
+        <span class="oi oi-home" aria-hidden="true"></span> Livedocs API Swagger
+    </a>
+    <button type="button" class="btn btn-primary" @onclick="CopyTokenToClipboard" title="Copy bearer token to clipboard for Swagger auth"><i class="fas fa-key"></i> Copy token</button>
 </div>
 
 @code {
@@ -33,6 +41,8 @@
 
     public List<GetResourceDocumentationsFile> files = new();
 
+    private IJSObjectReference _clipBoardInterface;
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
@@ -40,16 +50,45 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var menuList = await _http.GetFromJsonAsync<GetResourceDocumentationsResponse>("api/v1/resources");
-
-        if (menuList is not null)
+        Console.WriteLine("NavMenu OnInitializedAsync");
+        
+        _authenticationStateProvider.AuthenticationStateChanged += async state =>
         {
-            files = menuList.Files;
-            StateHasChanged();
-        }
+            var authState = await state;
+            var isAuthenticated = authState.User.Identity.IsAuthenticated;
+            Console.WriteLine($"authState changed: isAuthenticated:{isAuthenticated} fetching available resource documentations...");
+
+            if (isAuthenticated)
+            {
+                var httpClient = _clientFacotry.CreateClient("LiveDocs.ServerAPI");
+                var menuList = await httpClient.GetFromJsonAsync<GetResourceDocumentationsResponse>("api/v1/resources");
+
+                if (menuList is not null)
+                {
+                    files = menuList.Files;
+                    StateHasChanged();
+                }
+            }
+        };        
+        
         await base.OnInitializedAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _clipBoardInterface = await _js.InvokeAsync<IJSObjectReference>("import", "./clipboard-interface.js");
+        }
+    }
+
+    private async Task CopyTokenToClipboard()
+    {
+        var result = await _tokenProvider.RequestAccessToken();
+        if (result.TryGetToken(out var token)) {
+            await _clipBoardInterface.InvokeVoidAsync("copyText", $"bearer {token.Value}");
+        }
+    }
 
     public class GetResourceDocumentationsFile
     {

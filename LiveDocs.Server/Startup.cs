@@ -25,6 +25,8 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.OpenApi.Models;
+using AJP.MediatrEndpoints.Swagger;
 
 namespace LiveDocs.Server
 {
@@ -43,38 +45,6 @@ namespace LiveDocs.Server
         {
             services.Configure<StronglyTypedConfig.LiveDocs>(Configuration.GetSection(StronglyTypedConfig.LiveDocs.ConfigKey));
             services.Configure<StronglyTypedConfig.AzureAd>(Configuration.GetSection(StronglyTypedConfig.AzureAd.ConfigKey));
-                      
-            // services.AddAuthentication(options =>
-            // {
-            //     options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-            //     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            // })
-            //.AddCookie()
-            //.AddOpenIdConnect(options =>
-            //{
-            //    options.ClientId = Configuration["AzureAd:ClientId"];
-            //    options.Authority = Configuration["AzureAd:Instance"] + Configuration["AzureAd:TenantId"];
-            //})
-            //.AddJwtBearer(options =>
-            //{
-            //    options.Authority = Configuration["AzureAd:Instance"] + Configuration["AzureAd:TenantId"];
-            //    options.Audience = Configuration["AzureAd:Audience"];
-            //    options.Events = new JwtBearerEvents();
-            //    options.Events.OnMessageReceived = context =>
-            //    {
-            //        if (context.Request.Path.Value.StartsWith("/latestmarkdownhub") && context.Request.Query.TryGetValue("token", out var token))
-            //        {
-            //            context.Token = token;
-            //        }
-
-            //        return Task.CompletedTask;
-            //    };
-            //});
-
-            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-                .AddMicrosoftIdentityWebApp(Configuration.GetSection("AzureAd"));
-
-            //services.AddSingleton<IUserIdProvider, EmailBasedUserIdProvider>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAd"));
@@ -83,7 +53,6 @@ namespace LiveDocs.Server
             {
                 options.TokenValidationParameters.NameClaimType = "name";
 
-                // (from https://docs.microsoft.com/en-us/aspnet/core/signalr/authn-and-authz?view=aspnetcore-5.0)
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
@@ -92,8 +61,7 @@ namespace LiveDocs.Server
 
                         // If the request is for our hub...
                         var path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) &&
-                        (path.StartsWithSegments("/latestmarkdownhub")))
+                        if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/latestmarkdownhub")))
                         {
                             context.Token = accessToken;
                         }
@@ -108,10 +76,11 @@ namespace LiveDocs.Server
                     {
                         var x = context.Principal?.Identity?.Name;
                         return Task.CompletedTask;
-                    },OnForbidden = context => 
-                    {                        
-                        return Task.CompletedTask;
-                    }
+                    },
+                    OnForbidden = context =>
+                  {
+                      return Task.CompletedTask;
+                  }
                 };
             });
 
@@ -142,7 +111,7 @@ namespace LiveDocs.Server
             services.AddSingleton<HubGroupTracker>();
             services.AddSingleton<IHubGroupTracker>(sp => sp.GetRequiredService<HubGroupTracker>());
             services.AddSingleton<IConnectedClientStats>(sp => sp.GetRequiredService<HubGroupTracker>());
-            
+
             services.AddSingleton<MarkdownReplacementAggregatorBackgroundService>();
             services.AddSingleton<IMarkdownReplacementAggregatorBackgroundService>(sp => sp.GetRequiredService<MarkdownReplacementAggregatorBackgroundService>());
             services.AddSingleton<IResourceDocumentationStats>(sp => sp.GetRequiredService<MarkdownReplacementAggregatorBackgroundService>());
@@ -160,7 +129,7 @@ namespace LiveDocs.Server
             {
                 c.BaseAddress = new Uri(WellKnownAzureAdEndpointUri);
             });
-            
+
             services.AddHttpClient("AzureRMClient", c =>
             {
                 c.BaseAddress = new Uri(Configuration["LiveDocs:azureResourceManagementApiBaseUri"]);
@@ -170,9 +139,46 @@ namespace LiveDocs.Server
             {
             });
 
-            
+            services.AddMvc();
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Livedocs Api",
+                    Version = "v1",
+                    Description = "Api for livedocs backend"
+                });
+
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\"",
+                });
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                 {
+                     {
+                        new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                                }
+                            },
+                            new string[] {}
+                     }
+                 });
+
+                options.DocumentFilter<AddEndpointsDocumentFilter>();
+            });
+            services.AddMediatrEndpointsSwagger();
+
         }
-        
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseResponseCompression();
@@ -181,14 +187,19 @@ namespace LiveDocs.Server
             {
                 app.UseDeveloperExceptionPage();
             }
-                        
+
             app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
 
-            app.UseRouting();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Livedocs API V1");
+                c.InjectStylesheet("../static/swagger.css");
+            });
 
-            app.CopyTokenFromQueryToHeaderForSignalrHub("/latestmarkdownhub");
+            app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -199,8 +210,6 @@ namespace LiveDocs.Server
                 endpoints.MapControllers();
                 endpoints.MapFallbackToFile("index.html");
 
-                endpoints.MapGet("/hello", context => context.Response.WriteAsync("helloworld")).RequireAuthorization();
-
                 endpoints.MapHub<LatestMarkdownHub>("/latestmarkdownhub");
 
                 endpoints.MapGroupOfEndpointsForAPath("/api/v1/resources", "LiveDocsResources")
@@ -209,36 +218,8 @@ namespace LiveDocs.Server
                         "/reload", "Reload the Resource Documentation files i.e. to reflect recent changes.", configureEndpoint: endpoint => endpoint.RequireAuthorization());
 
                 endpoints.MapGroupOfEndpointsForAPath("/api/v1/stats", "Stats")
-                    .WithGet<GetStatsRequest, GetStatsResponse>("/");
+                    .WithGet<GetStatsRequest, GetStatsResponse>("/", configureEndpoint: endpoint => endpoint.RequireAuthorization());
             });
-        }
-    }
-
-    public class EmailBasedUserIdProvider : IUserIdProvider
-    {
-        public virtual string GetUserId(HubConnectionContext connection)
-        {
-            return connection.User?.FindFirst(ClaimTypes.Email)?.Value;
-        }
-    }
-
-    public static class AuthExtensions 
-    {
-        public static void CopyTokenFromQueryToHeaderForSignalrHub(this IApplicationBuilder app, string hubPrefix)
-        {
-            app.Use(async (context, next) =>
-            {
-                var path = context.Request.Path.Value ?? string.Empty;
-                if (path.StartsWith(hubPrefix))
-                {
-                    if (context.Request.Query.TryGetValue("access_token", out var token))
-                    {
-                        context.Request.Headers.Add("Authorization", new string[] { "bearer " + token });
-                    }
-                }
-                await next();
-            });
-
         }
     }
 }
