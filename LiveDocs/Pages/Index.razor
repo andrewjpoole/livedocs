@@ -2,9 +2,11 @@
 @implements IAsyncDisposable
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager _navigationManager
-@inject HttpClient _http
+@*@inject HttpClient _http*@
+@inject IAccessTokenProvider _tokenProvider
 @inject IJSRuntime _js
 
 <p>LiveDocs @Page Resource Documentation, last rendered @_lastRendered</p>
@@ -23,13 +25,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine($"OnInitializedAsync for {Page}");
+        Console.WriteLine($"OnInitializedAsync Index.razor");
 
         await base.OnInitializedAsync();
 
         _hubConnection = new HubConnectionBuilder()
-            .WithUrl(_navigationManager.ToAbsoluteUri("/latestmarkdownhub"))
+            .WithUrl(_navigationManager.ToAbsoluteUri("/latestmarkdownhub"), 
+            async options =>  {
+                options.AccessTokenProvider = async () => {
+                      var result = await _tokenProvider.RequestAccessToken();
+                      if (result.TryGetToken(out var token)) {
+                          Console.WriteLine($"fetched token successfully for hub connection {token.Value}");
+                          return token.Value;
+                      }
+                      Console.WriteLine($"failed to fetch token");
+                      return string.Empty;
+                };                
+            })
             .Build();
+                        
 
         _hubConnection.On<string>("SendLatestMarkdownToInterestedClients", async (newMarkdown) =>
         {

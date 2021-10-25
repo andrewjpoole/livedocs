@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LiveDocs.Server.RequestHandlers;
+using Microsoft.AspNetCore.SignalR;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace LiveDocs.Server.Hubs
@@ -11,19 +12,21 @@ namespace LiveDocs.Server.Hubs
     {
         private Dictionary<string, Dictionary<string, ConnectedClient>> _groupMembership = new();
 
-        public void MoveConnectionIdToGroup(string connectionId, string userIdentifier, string groupName)
+        public void MoveConnectionIdToGroup(HubCallerContext context, string groupName)
         {
             // a single connection (i.e. a browser tab) should only be in one group at a time
             // a user may have multiple tabs open, but each will have its own connection Id
-            RemoveConnectionIdFromAllGroups(connectionId);
+            RemoveConnectionIdFromAllGroups(context.ConnectionId);
+
+            var connectedClient = new ConnectedClient(context.ConnectionId, context.User?.Identity?.Name ?? "Name is null", context.UserIdentifier ?? "UserId is null");
 
             if (!_groupMembership.ContainsKey(groupName))
             {
-                _groupMembership.Add(groupName, new Dictionary<string, ConnectedClient>{{ connectionId, new ConnectedClient(connectionId, userIdentifier) }});
+                _groupMembership.Add(groupName, new Dictionary<string, ConnectedClient>{{ context.ConnectionId, connectedClient } });
                 return;
             }
 
-            _groupMembership[groupName].Add(connectionId, new ConnectedClient(connectionId, userIdentifier));
+            _groupMembership[groupName].Add(context.ConnectionId, connectedClient);
         }
 
         public void RemoveConnectionIdFromAllGroups(string connectionId)
@@ -50,6 +53,7 @@ namespace LiveDocs.Server.Hubs
                     {
                         y.ConnectionId,
                         y.UserIdentifier,
+                        y.Name,
                         y.JoinedGroupAt
                     })
                 })
@@ -61,11 +65,13 @@ namespace LiveDocs.Server.Hubs
     {
         public string ConnectionId { get; }
         public string UserIdentifier { get; }
+        public string Name { get; }
         public DateTime JoinedGroupAt { get; }
 
-        public ConnectedClient(string connectionId, string userIdentifier)
+        public ConnectedClient(string connectionId, string name, string userIdentifier)
         {
             ConnectionId = connectionId;
+            Name = name;
             UserIdentifier = userIdentifier;
             JoinedGroupAt = DateTime.Now;
         }

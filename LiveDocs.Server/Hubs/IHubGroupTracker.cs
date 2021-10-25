@@ -1,8 +1,10 @@
-﻿namespace LiveDocs.Server.Hubs
+﻿using Microsoft.AspNetCore.SignalR;
+
+namespace LiveDocs.Server.Hubs
 {
     public interface IHubGroupTracker
     {
-        void MoveConnectionIdToGroup(string connectionId, string UserIdentifier, string groupName);
+        void MoveConnectionIdToGroup(HubCallerContext context, string groupName);
 
         void RemoveConnectionIdFromAllGroups(string connectionId);
 

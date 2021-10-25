@@ -1,4 +1,4 @@
-﻿@inject HttpClient Http
+﻿@inject HttpClient _http
 
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">LiveDocs</a>
@@ -31,7 +31,7 @@
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    public IEnumerable<GetResourceDocumentationsFile> files;
+    public List<GetResourceDocumentationsFile> files = new();
 
     private void ToggleNavMenu()
     {
@@ -40,9 +40,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var menuList = await Http.GetFromJsonAsync<GetResourceDocumentationsResponse>("api/v1/resources");
-        files = menuList.Files;
-        StateHasChanged();
+        var menuList = await _http.GetFromJsonAsync<GetResourceDocumentationsResponse>("api/v1/resources");
+
+        if (menuList is not null)
+        {
+            files = menuList.Files;
+            StateHasChanged();
+        }
         await base.OnInitializedAsync();
     }
 
@@ -56,7 +60,7 @@
 
     public class GetResourceDocumentationsResponse
     {
-        public IEnumerable<GetResourceDocumentationsFile> Files { get; init; }
+        public List<GetResourceDocumentationsFile> Files { get; init; } = new();
     }
 
 }

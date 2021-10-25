@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
 using LiveDocs.Server.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace LiveDocs.Server.Hubs
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class LatestMarkdownHub : Hub
     {
         private readonly ILogger<LatestMarkdownHub> _logger;
@@ -27,7 +30,7 @@ namespace LiveDocs.Server.Hubs
             _logger.LogInformation($"SignalR client {Context.ConnectionId} requesting markdown for {resource}");
 
             await Groups.AddToGroupAsync(Context.ConnectionId, resource);
-            _hubGroupTracker.MoveConnectionIdToGroup(Context.ConnectionId, Context.UserIdentifier ?? "UserIdentifier was null", resource);
+            _hubGroupTracker.MoveConnectionIdToGroup(Context, resource);
             
             await _markdownReplacementAggregatorBackgroundService.SendLatestMarkDownForNewGroupMember(resource, Context.ConnectionId);
         }
