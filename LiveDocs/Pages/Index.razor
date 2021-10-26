@@ -1,12 +1,10 @@
 ﻿@page "/{page}"
-@implements IAsyncDisposable
+@inherits FragmentNavigationBase
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Microsoft.AspNetCore.SignalR.Client
-@inject NavigationManager _navigationManager
 @inject IAccessTokenProvider _tokenProvider
-@inject IJSRuntime _js
 
 <p>LiveDocs @Page Resource Documentation, last rendered @_lastRendered</p>
 
@@ -16,7 +14,6 @@
 @code {
     private HubConnection _hubConnection;
     public string MarkdownText = "#### waiting for markdown and data to be rendered...";
-    private IJSObjectReference _scrollInterface;
     private DateTime _lastRendered = DateTime.Now;
 
     [Parameter]
@@ -29,7 +26,7 @@
         await base.OnInitializedAsync();
 
         _hubConnection = new HubConnectionBuilder()
-            .WithUrl(_navigationManager.ToAbsoluteUri("/latestmarkdownhub"), 
+            .WithUrl(NavManager.ToAbsoluteUri("/latestmarkdownhub"), 
             async options =>  {
                 options.AccessTokenProvider = async () => {
                       var result = await _tokenProvider.RequestAccessToken();
@@ -49,7 +46,7 @@
             Console.WriteLine("New markdown received");
 
             // remember scroll state before updating markdown
-            var scrollState = await _scrollInterface.InvokeAsync<System.Drawing.Point>("getScroll");
+            var scrollState = await ScrollInterface.InvokeAsync<System.Drawing.Point>("getScroll");
             Console.WriteLine(scrollState);
 
             // update markdown
@@ -58,7 +55,7 @@
             StateHasChanged();
 
             // set scroll state to same as before updating markdown
-            await _scrollInterface.InvokeVoidAsync("setScroll", scrollState.X, scrollState.Y);
+            await ScrollInterface.InvokeVoidAsync("setScroll", scrollState.X, scrollState.Y);
         });
 
         await _hubConnection.StartAsync();
@@ -73,22 +70,6 @@
         Console.WriteLine($"SelectResource called for {Page}");
 
         await base.OnParametersSetAsync();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            _scrollInterface = await _js.InvokeAsync<IJSObjectReference>("import", "./scroll-interface.js");
-        }
-    }
-
-    async ValueTask IAsyncDisposable.DisposeAsync()
-    {
-        if (_scrollInterface is not null)
-        {
-            await _scrollInterface.DisposeAsync();
-        }
     }
 }
 

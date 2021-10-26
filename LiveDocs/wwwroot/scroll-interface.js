@@ -8,3 +8,13 @@
 export function setScroll(left, top) {
     window.scrollTo(left, top);
 }
+
+export function scrollToElement(elementId) {
+    var element = document.getElementById(elementId);
+
+    if (element) {
+        element.scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
+}

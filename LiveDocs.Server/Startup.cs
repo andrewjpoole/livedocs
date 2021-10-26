@@ -18,13 +18,6 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
-using Microsoft.Extensions.Primitives;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.OpenApi.Models;
 using AJP.MediatrEndpoints.Swagger;
 
@@ -66,21 +59,7 @@ namespace LiveDocs.Server
                             context.Token = accessToken;
                         }
                         return Task.CompletedTask;
-                    },
-                    OnAuthenticationFailed = context =>
-                    {
-                        var ex = context.Exception;
-                        return Task.CompletedTask;
-                    },
-                    OnTokenValidated = context =>
-                    {
-                        var x = context.Principal?.Identity?.Name;
-                        return Task.CompletedTask;
-                    },
-                    OnForbidden = context =>
-                  {
-                      return Task.CompletedTask;
-                  }
+                    }
                 };
             });
 

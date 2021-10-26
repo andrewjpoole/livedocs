@@ -35,13 +35,13 @@ ideally the backend will push changes to any connected frontend clients, who wil
 * [x] Consider if a cache with item expiry would remove the need for a scheduler? only tasks which should do persistent storage should use the scheduler?
 * [x] server should Push rather than frontend pull, web sockets/signalR etc? (large)
 * [x] only query if someone is browsing? depend number of active clients, cache might help with this (?)
-* [ ] get fragment routing working in front end (small)
+* [x] add stats endpoint with client connections and replacements stats etc (medium)
+* [ ] get fragment routing working in front end (small) done needs testing
 * [ ] get links across resourceDocs working (small)
-* [ ] add stats endpoint with client connections and replacements stats etc (medium)
+* [ ] turn navmenu into a nested contents using fragments etc (medium)
 * [ ] fix client side scroll issue when deployed to appservice (?)
 * [ ] fix client side e.href.replace is not a function error (?)
-* [ ] fix 2 server errors which are always thrown on startup - cant change status code after request has begun etc (?)
-* [ ] switch to managed identities
+* [ ] switch to managed identities when accessing resources
 * [ ] resource config discovery, url to devops + walk repos? (large)
 * [ ] more replacements API call, Elastic query, App Insights query? need use cases (medium)
 * [ ] better styling (?)
