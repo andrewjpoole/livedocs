@@ -38,13 +38,16 @@ ideally the backend will push changes to any connected frontend clients, who wil
 * [x] add stats endpoint with client connections and replacements stats etc (medium)
 * [ ] get fragment routing working in front end (small) done needs testing
 * [ ] get links across resourceDocs working (small)
-* [ ] turn navmenu into a nested contents using fragments etc (medium)
+* [ ] turn navmenu into a nested contents using domains/subdomains/md headings as fragments etc (medium)
 * [ ] fix client side scroll issue when deployed to appservice (?)
 * [ ] fix client side e.href.replace is not a function error (?)
 * [ ] switch to managed identities when accessing resources
-* [ ] resource config discovery, url to devops + walk repos? (large)
-* [ ] more replacements API call, Elastic query, App Insights query? need use cases (medium)
 * [ ] better styling (?)
+* [ ] more replacements API call, Elastic query, App Insights query? need use cases (medium)
+* [ ] search accross resource documentations, maybe include tags in the resource documentation json?
+
+future
+* [ ] resource config discovery, url to devops + walk repos? (large)
 * [ ] split dummy data creation out to seperate web app and improve - queue actual messages* (medium)
 * [ ] Consider storing some data in app insights? where it would be queryable outside of this app, flag in replacement config?
 
